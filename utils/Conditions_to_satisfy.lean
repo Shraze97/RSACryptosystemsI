@@ -46,10 +46,44 @@ theorem mod_pow_eq (pos: n ≠ 1): mod_pow a b n = (a ^ b) % n := by
   sorry
 -/
 
--- theorem mod_pow_eq' (pos: n ≠ 1)(a : ℕ)(b : ℕ)(n : ℕ): mod_pow a b n = (a ^ b) % n := by
---   rw[mod_pow]
---   split_ifs
---   · rename_i k h1
+theorem mod_pow_eq (a : ℕ)(b : ℕ)(n : ℕ)(pos: n ≠ 1)(hneq : n ≠ 0): mod_pow a b n hneq = (a ^ b) % n := by
+  unfold mod_pow
+  have h1 : n > 1 := by
+    have h1' : (n = 0 ∨ n = 1 ∨ n > 1) := by
+      cases n
+      · simp
+      · rename_i k
+        simp
+        cases k
+        · simp
+        · rename_i k'
+          simp
+    cases h1'
+    · rename_i left
+      rw[left] at pos
+      contradiction
+    · rename_i right
+      cases right
+      · rename_i left'
+        rw[left'] at pos
+        contradiction
+      · rename_i right'
+        assumption
+  split
+  · simp     
+    rw[Nat.mod_eq_of_lt h1]
+  · simp 
+  · simp 
+    rename_i k
+    rw[← Nat.add_one k]
+    rw[← Nat.add_one (k/2)]  
+    rw[← Nat.add_one (k + 1)]
+    split 
+    · rw[mod_pow_eq a (k / 2 + 1) n pos hneq] 
+      
+    · rw[mod_pow_eq a (k + 1) n pos hneq] 
+  
+  sorry
 
 
 theorem freshman's_dream (a b : ℕ) (hp : Nat.Prime p) : ((a + b) ^ p) % p = (a ^ p + b ^ p) % p := by
@@ -160,13 +194,74 @@ theorem fermat_little_theorem_mod (p : ℕ) (hp : Nat.Prime p) (a : ℕ)(hpneqn 
     assumption 
   apply Nat.ModEq.cancel_left_of_coprime hpneqn lem
 
-theorem RSAMain (p : ℕ) (q : ℕ)(pneqq: p ≠ q)(hp : Nat.Prime p) (hq : Nat.Prime q)(a : ℕ)(hpneqdiva : ¬(p ∣ a))(hqneqdiva : ¬(q ∣ a)) : a^(Nat.lcm (p-1) (q-1)) % (p*q) = 1 := by 
+theorem RSAMain_mod (p : ℕ) (q : ℕ)(pneqq: p ≠ q)(hp : Nat.Prime p) (hq : Nat.Prime q)(a : ℕ)(hpneqdiva : ¬(p ∣ a))(hqneqdiva : ¬(q ∣ a)) : a ^ (Nat.lcm (p - 1) (q - 1)) ≡ 1 [MOD p * q]:= by
+have H1 : ((p - 1) ∣ Nat.lcm (p - 1) (q - 1)) := by
+  apply Nat.dvd_lcm_left
+have H2 : (q - 1) ∣  Nat.lcm (p - 1) (q - 1) := by
+  apply Nat.dvd_lcm_right
+
 have h1 : a ^ (p - 1) ≡ 1 [MOD p] := fermat_little_theorem_mod p hp a hpneqdiva
 have h2 : a ^ (q - 1) ≡ 1 [MOD q] := fermat_little_theorem_mod q hq a hqneqdiva
+
 have copq : Nat.coprime p q := by
   rw[← Nat.coprime_primes hp hq] at pneqq
   assumption
 
-sorry  
+have h3 : a ^ Nat.lcm (p - 1) (q - 1) ≡ 1 [MOD p] := by
+  have cancel : (p - 1) * (Nat.lcm (p - 1) (q - 1) / (p - 1)) = Nat.lcm (p - 1) (q - 1) := by
+    apply Nat.mul_div_cancel' H1
+  have cancel' : a ^ ((p - 1) * (Nat.lcm (p - 1) (q - 1) / (p - 1))) ≡ 1 [MOD p] := by
+    have pow1 : a ^ ((p - 1) * (Nat.lcm (p - 1) (q - 1) / (p - 1))) ≡ 1 ^ (Nat.lcm (p - 1) (q - 1) / (p - 1)) [MOD p] := by
+      have replace : a ^ ((p - 1) * (Nat.lcm (p - 1) (q - 1) / (p - 1))) = (a ^ (p - 1)) ^ (Nat.lcm (p - 1) (q - 1) / (p - 1)) := by
+        rw[pow_mul]
+      rw[replace]
+      apply Nat.ModEq.pow (Nat.lcm (p - 1) (q - 1) / (p - 1)) h1
+    have pow1' : 1 ^ ((Nat.lcm (p - 1) (q - 1) / (p - 1))) = 1 := by
+      simp
+    rw[pow1'] at pow1
+    assumption
+  rw[cancel] at cancel' 
+  assumption
+
+have h3' : a ^ Nat.lcm (p - 1) (q - 1) ≡ 1 [MOD q] := by
+  have cancel : (q - 1) * (Nat.lcm (p - 1) (q - 1) / (q - 1)) = Nat.lcm (p - 1) (q - 1) := by
+    apply Nat.mul_div_cancel' H2
+  have cancel' : a ^ ((q - 1) * (Nat.lcm (p - 1) (q - 1) / (q - 1))) ≡ 1 [MOD q] := by
+    have pow1 : a ^ ((q - 1) * (Nat.lcm (p - 1) (q - 1) / (q - 1))) ≡ 1 ^ (Nat.lcm (p - 1) (q - 1) / (q - 1)) [MOD q] := by
+      have replace : a ^ ((q - 1) * (Nat.lcm (p - 1) (q - 1) / (q - 1))) = (a ^ (q - 1)) ^ (Nat.lcm (p - 1) (q - 1) / (q - 1)) := by
+        rw[pow_mul]
+      rw[replace]
+      apply Nat.ModEq.pow (Nat.lcm (p - 1) (q - 1) / (q - 1)) h2
+    have pow1' : 1 ^ ((Nat.lcm (p - 1) (q - 1) / (q - 1))) = 1 := by
+      simp
+    rw[pow1'] at pow1
+    assumption
+  rw[cancel] at cancel' 
+  assumption
+
+have h4 : (a ^ Nat.lcm (p - 1) (q - 1) ≡ 1 [MOD p]) ∧ (a ^ Nat.lcm (p - 1) (q - 1) ≡ 1 [MOD q]) := by
+  apply And.intro 
+  assumption
+  assumption
+
+have h5 : a ^ Nat.lcm (p - 1) (q - 1) ≡ 1 [MOD p * q] := by
+  rw[Nat.modEq_and_modEq_iff_modEq_mul copq] at h4
+  assumption  
+
+assumption
+
+theorem RSAMain (p : ℕ) (q : ℕ)(pneqq: p ≠ q)(hp : Nat.Prime p) (hq : Nat.Prime q)(a : ℕ)(hpneqdiva : ¬(p ∣ a))(hqneqdiva : ¬(q ∣ a)) : a ^ (Nat.lcm (p - 1) (q - 1)) % (p * q) = 1 := by
+rw[RSAMain_mod p q pneqq hp hq a hpneqdiva hqneqdiva]
+have h1 : (p * q) > 1 := by
+  have ppos : 1 < p := by
+    apply Nat.Prime.one_lt hp
+  have qpos : 1 < q := by
+    apply Nat.Prime.one_lt hq
+  apply Right.one_lt_mul' ppos qpos
+apply Nat.mod_eq_of_lt h1 
 
 #check Nat.coprime_iff_gcd_eq_one
+#check Nat.mul_div_cancel'
+#check Nat.ModEq.pow
+
+-- apply Nat.ModEq.pow (Nat.lcm (p - 1) (q - 1) / (p - 1)) h1
