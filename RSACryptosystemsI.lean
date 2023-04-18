@@ -3,20 +3,19 @@ import Init
 
 
    
-def mod_pow (a : ℕ)(b : ℕ)(n : ℕ)(hneq : n ≠ 0) : ℕ :=
+def mod_pow (a : ℕ)(b : ℕ)(n : ℕ) : ℕ :=
   match b with 
   | 0 => 1
-  | 1 => a % n
-  | k + 2 => 
+  | Nat.succ k=> 
     if k % 2 = 0 then 
-    let c := mod_pow a ((k + 2)/2) n hneq 
+    let c := mod_pow a ((k + 1)/2) n 
     (c * c) % n
   else 
-    (a * (mod_pow a (k + 1) n hneq)) % n
+    (a * (mod_pow a k n )) % n
 termination_by _ _ => b
 decreasing_by      
 simp 
-have h3 : k/2 + 1 < k + 1 + 1 := by
+have h3 : (k + 1)/2  < k + 1 := by
   simp
   have h4 : k/2 ≤ k := by
     apply Nat.div_le_self
@@ -33,12 +32,12 @@ try apply h4
 
 -- def inverse (a : ℕ) (b : ℕ)(h : (Nat.gcd a b) = 1) : ℕ :=
 
-def inverse (a : ℕ) (b : ℕ)(h : (Nat.gcd a b) = 1) : ℕ := 
+def inverse (a : ℕ) (b : ℕ): ℕ := 
   let (x, _) := Nat.xgcd a b
   if x < 0 then
-    b - ((Int.natAbsHom x) % b)
+    b - ((Int.natAbs x) % b)
   else
-    (Int.natAbsHom x) % b
+    (Int.natAbs x) % b
 
 
 structure Public_key  where 
@@ -59,7 +58,7 @@ structure Key_pair extends Public_key where
 
 /- The key generation Function-/
 def value_d(a : Key_pair) : ℕ   :=
-  let d := inverse a.e (Nat.lcm (a.p - 1) (a.q - 1)) a.he.right
+  let d := inverse a.e (Nat.lcm (a.p - 1) (a.q - 1)) 
   d
 
 structure Private_key extends Key_pair where
@@ -75,9 +74,9 @@ def key_generation  (a : Key_pair) : Private_key :=
 
 /- The encryption Function-/
 def encryption (a : Public_key) (m : ℕ) : ℕ := 
-  mod_pow m a.e a.n a.hneq0 
+  mod_pow m a.e a.n 
 
 
 /- The decryption Function-/
 def decryption (b : Private_key)(me : ℕ) : ℕ := 
-  mod_pow me b.d b.n b.hneq0
+  mod_pow me b.d b.n 
