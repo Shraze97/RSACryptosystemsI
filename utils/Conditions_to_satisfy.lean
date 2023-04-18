@@ -45,7 +45,7 @@ import RSACryptosystemsI
 
 --   sorry
 
-theorem mod_pow_eq' (a : ℕ)(b : ℕ)(n : ℕ) (pos: n ≠ 1): mod_pow a b n  = (a ^ b) % n := by
+theorem mod_pow_eq (a : ℕ)(b : ℕ)(n : ℕ) (pos: n ≠ 1): mod_pow a b n  = (a ^ b) % n := by
   sorry
 
 
