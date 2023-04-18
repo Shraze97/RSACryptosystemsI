@@ -1,55 +1,52 @@
 import Mathlib
 import RSACryptosystemsI
 
-/-
-theorem mod_pow_eq (pos: n ≠ 1): mod_pow a b n = (a ^ b) % n := by
-  rw[mod_pow]
-  split_ifs
-  · rename_i h1
-    rw[h1]
-    simp 
-    have h2 : 1 % n = 1 := by
-      cases n
-      · simp 
-      · rename_i k 
-        simp 
-        rw[← Nat.add_one k]
-        have h2 : k ≠ 0 := by
-          intro h3 
-          have h4 : Nat.succ k = 1 := by
-            rw[h3]
-          contradiction 
-        simp 
-        have h4 : (k = 0 ∨ 0 < k) := by
-          apply Nat.eq_zero_or_pos k
-        cases h4 
-        · rename_i left 
-          rw[left] at h2 
-          contradiction
-        · rename_i right
-          assumption
-    simp[h2] 
-  · rename_i h1 h2
-    rw[h2]
-    simp
-  · rename_i h1 h2 h3
-    simp 
-    induction b
-    · simp 
-      rw[mod_pow]
-      simp 
-    · rename_i k base 
-      rw[← Nat.add_one k]   
 
-  · rename_i h1 h2 h3    
-
-  sorry
--/
-
--- theorem mod_pow_eq' (pos: n ≠ 1)(a : ℕ)(b : ℕ)(n : ℕ): mod_pow a b n = (a ^ b) % n := by
---   rw[mod_pow]
+-- theorem mod_pow_eq (pos: n ≠ 1): mod_pow a b n = (a ^ b) % n := by
+--   rw[mod_pow] 
 --   split_ifs
---   · rename_i k h1
+--   · rename_i h1
+--     rw[h1]
+--     simp 
+--     have h2 : 1 % n = 1 := by
+--       cases n
+--       · simp 
+--       · rename_i k 
+--         simp 
+--         rw[← Nat.add_one k]
+--         have h2 : k ≠ 0 := by
+--           intro h3 
+--           have h4 : Nat.succ k = 1 := by
+--             rw[h3]
+--           contradiction 
+--         simp 
+--         have h4 : (k = 0 ∨ 0 < k) := by
+--           apply Nat.eq_zero_or_pos k
+--         cases h4 
+--         · rename_i left 
+--           rw[left] at h2 
+--           contradiction
+--         · rename_i right
+--           assumption
+--     simp[h2] 
+--   · rename_i h1 h2
+--     rw[h2]
+--     simp
+--   · rename_i h1 h2 h3
+--     simp 
+--     induction b
+--     · simp 
+--       rw[mod_pow]
+--       simp 
+--     · rename_i k base 
+--       rw[← Nat.add_one k]   
+
+--   · rename_i h1 h2 h3    
+
+--   sorry
+
+theorem mod_pow_eq' (a : ℕ)(b : ℕ)(n : ℕ) (pos: n ≠ 1): mod_pow a b n  = (a ^ b) % n := by
+  sorry
 
 
 theorem freshman's_dream (a b : ℕ) (hp : Nat.Prime p) : ((a + b) ^ p) % p = (a ^ p + b ^ p) % p := by
