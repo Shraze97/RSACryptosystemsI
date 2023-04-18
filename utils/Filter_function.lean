@@ -154,6 +154,10 @@ theorem divides_equiv (n : ℕ)(lem : divides (List.range' 2 ((Nat.sqrt n) - 1))
       linarith only [h₁] 
   exact divides_aux n (List.range' 2 ((Nat.sqrt n) - 1)) lem m h h₂
 
+lemma prime_gen_aux (n : ℕ)(hn1 : 2 ≤ n)(hn2 : n < 4)  : n = 2 ∨ n = 3 := by
+  interval_cases n
+  all_goals {simp}
+
 /-- Nat.Prime Generator Function-/
 theorem prime_gen (n : ℕ)(hp : (is_prime n) = true) : Nat.Prime n := by 
   rw[is_prime] at hp
@@ -166,7 +170,7 @@ theorem prime_gen (n : ℕ)(hp : (is_prime n) = true) : Nat.Prime n := by
   · have h' : n < 4 := by 
       linarith only [h]
     have h'' : n = 2 ∨ n = 3 := by 
-      sorry
+      exact prime_gen_aux n (hp.1) h'
     cases h''
     · rename_i h₁
       rw[h₁]
