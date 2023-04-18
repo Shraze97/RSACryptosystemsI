@@ -118,8 +118,32 @@ def is_prime (n : ℕ) : Bool :=
   if n < 2 then
     false
   else
-    let l := List.drop 2 (List.range (Nat.sqrt n)) 
-    not (divides l n)
+    if n < 4 then
+      true
+    else
+      let l := List.range' 2 ((Nat.sqrt n) - 1) 
+      not (divides l n)
+/--divides function equivalence-/
+theorem divides_equiv (n : ℕ)(lem : divides (List.range' 2 ((Nat.sqrt n) - 1)) n = false)(lem1 : n ≥ 4 ) : ∀ (m : ℕ), 2 ≤ m → m ≤ Nat.sqrt n → ¬m ∣ n := by  
+  intros m h₀ h₁ h₂
+  have h : m ∈ List.range' 2 ((Nat.sqrt n) - 1) := by 
+    rw[List.mem_range']
+    apply And.intro
+    · assumption
+    · have h₃ : 1 ≤  Nat.sqrt n  := by 
+        linarith only [h₀,h₁]
+      have h₄ : 2 = 1 + 1 := by norm_num
+      rw[h₄,add_assoc]
+      have h₅ : 1 + (Nat.sqrt n -1) = Nat.sqrt n := by 
+        apply Nat.add_sub_cancel' h₃ 
+      rw[h₅]
+      
+  sorry
+
+/-- Nat.Prime Generator Function-/
+theorem prime_gen (n : ℕ)(hp : (is_prime n) = true) : Nat.Prime n := by 
+  simp [is_prime] at hp    
+  sorry
 
 /--outputs minimum Prime in a list-/
 def min_prime_list (l : List ℕ) : ℕ :=
@@ -130,6 +154,8 @@ def min_prime_list (l : List ℕ) : ℕ :=
       head
     else
       min_prime_list tail 
+
+
 
 /--Produces the proof that the minimum prime is in the list-/
 theorem min_prime_list_in_list (l : List ℕ)(h : l ≠ []) (h0 : 0 ∉ l )(hmain : min_prime_list l ≠ 0) : min_prime_list l ∈ l := by
@@ -157,6 +183,50 @@ theorem min_prime_list_in_list (l : List ℕ)(h : l ≠ []) (h0 : 0 ∉ l )(hmai
         simp [contra]
       right 
       apply min_prime_list_in_list tail lem lem2 hmain
+
+/--Produces the proof that the minimum prime is prime-/
+theorem min_prime_list_is_prime (l : List ℕ)(h : l ≠ []) (h0 : 0 ∉ l )(hmain : min_prime_list l ≠ 0) : is_prime (min_prime_list l) := by
+  match l with 
+  | [] => 
+    contradiction
+  | head :: tail =>
+    rw[min_prime_list] at hmain
+    split_ifs at hmain
+    · rename_i h' 
+      rw[min_prime_list]
+      simp [h']
+    · rename_i h'  
+      rw[min_prime_list]
+      simp [h']   
+      have lem : tail ≠ [] := by 
+        by_contra contra
+        rw[contra] at hmain
+        rw[min_prime_list] at hmain
+        apply hmain
+        simp
+      have lem2 : 0 ∉ tail := by
+        intro contra
+        apply h0
+        simp [contra]
+      simp[min_prime_list_is_prime tail lem lem2 hmain]
+
+/-- Defines an eligible List-/
+structure Eligible_List where 
+  l : List ℕ
+  h : l ≠ []
+  h0 : 0 ∉ l
+  hmain : min_prime_list l ≠ 0
+  deriving Repr
+
+/-- Picking Out a random Prime from a list of natural numbers -/
+def RandomPrimeGenerator_aux(el : Eligible_List) : { t : ℕ // t ∈ el.l ∧ is_prime t = true} := 
+  pickElemD el.l is_prime (min_prime_list el.l) (min_prime_list_in_list el.l el.h el.h0 el.hmain) (min_prime_list_is_prime el.l el.h el.h0 el.hmain)
+
+/-- -/ 
+def RandomPrimeGenerator(el : Eligible_List) : { t : ℕ // t ∈ el.l ∧ Nat.Prime t} := 
+  let a := RandomPrimeGenerator_aux el
+  ⟨a.val, ⟨ a.property.1, prime_gen (a.val) (a.property.2)⟩ ⟩
+
 
 /-!
 ## Random Monad
