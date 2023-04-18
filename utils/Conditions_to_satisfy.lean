@@ -140,3 +140,33 @@ theorem fermat_little_theorem' (p : ℕ) (hp : Nat.Prime p) (a : ℕ) : a ^ p �
     apply Nat.mod_eq_of_lt h6 
   rw[h5] at h4  
   assumption
+
+theorem fermat_little_theorem_mod (p : ℕ) (hp : Nat.Prime p) (a : ℕ)(hpneqn : ¬(p ∣ a)) : a ^ (p - 1) ≡ 1 [MOD p] := by
+  rw[← Nat.Prime.coprime_iff_not_dvd hp] at hpneqn
+  rw[Nat.coprime_iff_gcd_eq_one] at hpneqn
+  have h1 : a ^ p ≡ a [MOD p] := fermat_little_theorem' p hp a
+  have lem : a * a ^ (p - 1) ≡ a * 1 [MOD p] := by
+    have h' : a = a * 1 := by
+      simp
+    rw[← h']
+    have h'' : a ^ p = a * a ^ (p - 1) := by
+      have h''' : p - 1 + 1 = p := by
+        apply Nat.sub_add_cancel hp.pos
+      rw[add_comm] at h'''
+      nth_rewrite 1[← h'''] 
+      rw[pow_add]
+      simp
+    rw[← h'']
+    assumption 
+  apply Nat.ModEq.cancel_left_of_coprime hpneqn lem
+
+theorem RSAMain (p : ℕ) (q : ℕ)(pneqq: p ≠ q)(hp : Nat.Prime p) (hq : Nat.Prime q)(a : ℕ)(hpneqdiva : ¬(p ∣ a))(hqneqdiva : ¬(q ∣ a)) : a^(Nat.lcm (p-1) (q-1)) % (p*q) = 1 := by 
+have h1 : a ^ (p - 1) ≡ 1 [MOD p] := fermat_little_theorem_mod p hp a hpneqdiva
+have h2 : a ^ (q - 1) ≡ 1 [MOD q] := fermat_little_theorem_mod q hq a hqneqdiva
+have copq : Nat.coprime p q := by
+  rw[← Nat.coprime_primes hp hq] at pneqq
+  assumption
+
+sorry  
+
+#check Nat.coprime_iff_gcd_eq_one
