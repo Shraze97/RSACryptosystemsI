@@ -1,5 +1,4 @@
 import Mathlib
-
 /-!
 # Random sampling for an element
 
@@ -123,8 +122,23 @@ def is_prime (n : ℕ) : Bool :=
     else
       let l := List.range' 2 ((Nat.sqrt n) - 1) 
       not (divides l n)
+
+/--divides function auxilary-/
+theorem divides_aux (n : ℕ)(l : List ℕ)(lem : divides l n = false) : ∀ m ∈ l, ¬m ∣ n := by 
+  intros m h₀ h₁
+  match l with 
+  | [] => 
+    contradiction
+  | head :: tail =>
+    simp [divides] at lem
+    cases h₀ 
+    · rw[Nat.dvd_iff_mod_eq_zero] at h₁
+      exact lem.1 h₁ 
+    · rename_i h 
+      exact divides_aux n tail lem.2 m h h₁
+
 /--divides function equivalence-/
-theorem divides_equiv (n : ℕ)(lem : divides (List.range' 2 ((Nat.sqrt n) - 1)) n = false)(lem1 : n ≥ 4 ) : ∀ (m : ℕ), 2 ≤ m → m ≤ Nat.sqrt n → ¬m ∣ n := by  
+theorem divides_equiv (n : ℕ)(lem : divides (List.range' 2 ((Nat.sqrt n) - 1)) n = false) : ∀ (m : ℕ), 2 ≤ m → m ≤ Nat.sqrt n → ¬m ∣ n := by  
   intros m h₀ h₁ h₂
   have h : m ∈ List.range' 2 ((Nat.sqrt n) - 1) := by 
     rw[List.mem_range']
@@ -137,14 +151,30 @@ theorem divides_equiv (n : ℕ)(lem : divides (List.range' 2 ((Nat.sqrt n) - 1))
       have h₅ : 1 + (Nat.sqrt n -1) = Nat.sqrt n := by 
         apply Nat.add_sub_cancel' h₃ 
       rw[h₅]
-      
-  sorry
+      linarith only [h₁] 
+  exact divides_aux n (List.range' 2 ((Nat.sqrt n) - 1)) lem m h h₂
 
 /-- Nat.Prime Generator Function-/
 theorem prime_gen (n : ℕ)(hp : (is_prime n) = true) : Nat.Prime n := by 
-  simp [is_prime] at hp    
-  sorry
-
+  rw[is_prime] at hp
+  simp at hp
+  by_cases h : 4 ≤ n 
+  · rw[Nat.prime_def_le_sqrt]
+    apply And.intro 
+    · exact hp.1
+    · exact divides_equiv n (hp.2 h) 
+  · have h' : n < 4 := by 
+      linarith only [h]
+    have h'' : n = 2 ∨ n = 3 := by 
+      sorry
+    cases h''
+    · rename_i h₁
+      rw[h₁]
+      exact Nat.prime_two
+    · rename_i h₁
+      rw[h₁]
+      exact Nat.prime_three
+    
 /--outputs minimum Prime in a list-/
 def min_prime_list (l : List ℕ) : ℕ :=
   match l with 
