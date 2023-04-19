@@ -2,7 +2,7 @@ import Mathlib
 import Init 
 
 
-   
+/--Modular Exponentiation using binary exponentiation -/
 def mod_pow (a : ℕ)(b : ℕ)(n : ℕ): ℕ :=
   match b with 
   | 0 => 1
