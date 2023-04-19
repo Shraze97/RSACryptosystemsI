@@ -1,51 +1,6 @@
 import Mathlib
 import RSACryptosystemsI
 
-/-
-theorem mod_pow_eq (pos: n ≠ 1): mod_pow a b n = (a ^ b) % n := by
-  rw[mod_pow]
-  split_ifs
-  · rename_i h1
-    rw[h1]
-    simp 
-    have h2 : 1 % n = 1 := by
-      cases n
-      · simp 
-      · rename_i k 
-        simp 
-        rw[← Nat.add_one k]
-        have h2 : k ≠ 0 := by
-          intro h3 
-          have h4 : Nat.succ k = 1 := by
-            rw[h3]
-          contradiction 
-        simp 
-        have h4 : (k = 0 ∨ 0 < k) := by
-          apply Nat.eq_zero_or_pos k
-        cases h4 
-        · rename_i left 
-          rw[left] at h2 
-          contradiction
-        · rename_i right
-          assumption
-    simp[h2] 
-  · rename_i h1 h2
-    rw[h2]
-    simp
-  · rename_i h1 h2 h3
-    simp 
-    induction b
-    · simp 
-      rw[mod_pow]
-      simp 
-    · rename_i k base 
-      rw[← Nat.add_one k]   
-
-  · rename_i h1 h2 h3    
-
-  sorry
--/
-
 theorem mod_pow_eq (a : ℕ)(b : ℕ)(n : ℕ)(pos: n ≠ 1)(hneq : n ≠ 0): mod_pow a b n hneq = (a ^ b) % n := by
   unfold mod_pow
   have h1 : n > 1 := by
@@ -76,14 +31,55 @@ theorem mod_pow_eq (a : ℕ)(b : ℕ)(n : ℕ)(pos: n ≠ 1)(hneq : n ≠ 0): mo
   · simp 
     rename_i k
     rw[← Nat.add_one k]
-    rw[← Nat.add_one (k/2)]  
+    rw[← Nat.add_one (k / 2)]  
     rw[← Nat.add_one (k + 1)]
     split 
-    · rw[mod_pow_eq a (k / 2 + 1) n pos hneq] 
+    · rw[mod_pow_eq a (k / 2 + 1) n pos hneq]
+      have h : a ^ (k + 1 + 1) = a ^ (k / 2 + 1) * a ^ (k / 2 + 1) := by
+        rw[← pow_add]
+        have sum : k / 2 + 1 + (k / 2 + 1) = k + 1 + 1 := by
+          rw[← add_assoc]
+          simp
+          rw[add_comm]
+          rw[← add_assoc]
+          simp 
+          rename_i i
+          have dvd : 2 ∣ k := by
+            apply Nat.dvd_of_mod_eq_zero
+            assumption
+          have eq : 2 * (k / 2) = k := by
+            rw[Nat.mul_div_cancel_left' dvd]
+          have twice : k / 2 + k / 2 = 2 * (k / 2) := by
+            rw[← Nat.mul_two]
+            rw[Nat.mul_comm]
+          rw[eq] at twice
+          assumption
+        rw[sum]
+      rw[h]
+      generalize a ^ (k / 2 + 1) = b
+      rw[← Nat.ModEq]
+      have H : (b % n) ≡ b [MOD n] := by
+        rw[Nat.ModEq]
+        simp
+      apply Nat.ModEq.mul H H   
       
     · rw[mod_pow_eq a (k + 1) n pos hneq] 
-  
-  sorry
+      have h : a ^ (k + 1 + 1) = a ^ (k + 1) * a:= by
+        rw[pow_add]
+        simp
+      rw[h]
+      generalize a ^ (k + 1) = b
+      rw[← Nat.ModEq]
+      have comm : a * b = b * a := by
+        rw[Nat.mul_comm]
+      rw[← comm]
+      have H : (b % n) ≡ b [MOD n] := by
+        rw[Nat.ModEq]
+        simp
+      apply Nat.ModEq.mul_left a H
+termination_by _ _ => b
+decreasing_by
+sorry
 
 
 theorem freshman's_dream (a b : ℕ) (hp : Nat.Prime p) : ((a + b) ^ p) % p = (a ^ p + b ^ p) % p := by
@@ -258,10 +254,4 @@ have h1 : (p * q) > 1 := by
   have qpos : 1 < q := by
     apply Nat.Prime.one_lt hq
   apply Right.one_lt_mul' ppos qpos
-apply Nat.mod_eq_of_lt h1 
-
-#check Nat.coprime_iff_gcd_eq_one
-#check Nat.mul_div_cancel'
-#check Nat.ModEq.pow
-
--- apply Nat.ModEq.pow (Nat.lcm (p - 1) (q - 1) / (p - 1)) h1
+apply Nat.mod_eq_of_lt h1
