@@ -40,8 +40,7 @@ theorem mod_pow_eq (a : ℕ)(b : ℕ)(n : ℕ)(pos: n ≠ 1)(hneq : n ≠ 0): mo
         have sum : k / 2 + 1 + (k / 2 + 1) = k + 1 + 1 := by
           rw[← add_assoc]
           simp
-          rw[add_comm]
-          rw[← add_assoc]
+          rw[add_comm, ← add_assoc]
           simp 
           rename_i i
           have dvd : 2 ∣ k := by
@@ -50,8 +49,7 @@ theorem mod_pow_eq (a : ℕ)(b : ℕ)(n : ℕ)(pos: n ≠ 1)(hneq : n ≠ 0): mo
           have eq : 2 * (k / 2) = k := by
             rw[Nat.mul_div_cancel_left' dvd]
           have twice : k / 2 + k / 2 = 2 * (k / 2) := by
-            rw[← Nat.mul_two]
-            rw[Nat.mul_comm]
+            rw[← Nat.mul_two, Nat.mul_comm]
           rw[eq] at twice
           assumption
         rw[sum]
@@ -133,7 +131,7 @@ theorem freshman's_dream (a b : ℕ) (hp : Nat.Prime p) : ((a + b) ^ p) % p = (a
       assumption
   apply Nat.ModEq.mul_left (a ^ i * b ^ (p - i)) h3
 
-theorem fermat_little_theorem' (p : ℕ) (hp : Nat.Prime p) (a : ℕ) : a ^ p ≡ a [MOD p] := by
+theorem fermat_little_theorem_mod' (p : ℕ) (hp : Nat.Prime p) (a : ℕ) : a ^ p ≡ a [MOD p] := by
   induction a 
   · simp 
     have h1 : 0 ^ p = 0 := by
@@ -155,37 +153,10 @@ theorem fermat_little_theorem' (p : ℕ) (hp : Nat.Prime p) (a : ℕ) : a ^ p �
        apply Nat.ModEq.add_right _ base
     apply Nat.ModEq.trans h3 h4  
 
-  theorem fermat_little_theorem (p : ℕ) (hp : Nat.Prime p) (a : ℕ)(hpneqn : ¬(p ∣ a)) : a ^ (p - 1) % p = 1 := by
-  rw[← Nat.Prime.coprime_iff_not_dvd hp] at hpneqn
-  rw[Nat.coprime_iff_gcd_eq_one] at hpneqn
-  have h1 : a ^ p ≡ a [MOD p] := fermat_little_theorem' p hp a
-  have lem : a * a ^ (p - 1) ≡ a * 1 [MOD p] := by
-    have h' : a = a * 1 := by
-      simp
-    rw[← h']
-    have h'' : a ^ p = a * a ^ (p - 1) := by
-      have h''' : p - 1 + 1 = p := by
-        apply Nat.sub_add_cancel hp.pos
-      rw[add_comm] at h'''
-      nth_rewrite 1[← h'''] 
-      rw[pow_add]
-      simp
-    rw[← h'']
-    assumption  
-  have h3 : a ^ (p - 1) ≡ 1 [MOD p] := Nat.ModEq.cancel_left_of_coprime hpneqn lem
-  have h4 : a ^ (p - 1) % p = 1 % p := by
-    rw[h3]
-  have h5 : 1 % p = 1 := by
-    have h6 : (p > 1) := by
-      apply Nat.Prime.one_lt hp
-    apply Nat.mod_eq_of_lt h6 
-  rw[h5] at h4  
-  assumption
-
 theorem fermat_little_theorem_mod (p : ℕ) (hp : Nat.Prime p) (a : ℕ)(hpneqn : ¬(p ∣ a)) : a ^ (p - 1) ≡ 1 [MOD p] := by
   rw[← Nat.Prime.coprime_iff_not_dvd hp] at hpneqn
   rw[Nat.coprime_iff_gcd_eq_one] at hpneqn
-  have h1 : a ^ p ≡ a [MOD p] := fermat_little_theorem' p hp a
+  have h1 : a ^ p ≡ a [MOD p] := fermat_little_theorem_mod' p hp a
   have lem : a * a ^ (p - 1) ≡ a * 1 [MOD p] := by
     have h' : a = a * 1 := by
       simp
@@ -200,6 +171,18 @@ theorem fermat_little_theorem_mod (p : ℕ) (hp : Nat.Prime p) (a : ℕ)(hpneqn 
     rw[← h'']
     assumption 
   apply Nat.ModEq.cancel_left_of_coprime hpneqn lem
+
+theorem fermat_little_theorem (p : ℕ) (hp : Nat.Prime p) (a : ℕ)(hpneqn : ¬(p ∣ a)) : a ^ (p - 1) % p = 1 := by 
+  have h3 : a ^ (p - 1) ≡ 1 [MOD p] := by 
+    apply fermat_little_theorem_mod p hp a hpneqn
+  have h4 : a ^ (p - 1) % p = 1 % p := by
+    rw[h3]
+  have h5 : 1 % p = 1 := by
+    have h6 : (p > 1) := by
+      apply Nat.Prime.one_lt hp
+    apply Nat.mod_eq_of_lt h6 
+  rw[h5] at h4  
+  assumption
 
 theorem RSAMain_mod (p : ℕ) (q : ℕ)(pneqq: p ≠ q)(hp : Nat.Prime p) (hq : Nat.Prime q)(a : ℕ)(hpneqdiva : ¬(p ∣ a))(hqneqdiva : ¬(q ∣ a)) : a ^ (Nat.lcm (p - 1) (q - 1)) ≡ 1 [MOD p * q]:= by
 have H1 : ((p - 1) ∣ Nat.lcm (p - 1) (q - 1)) := by
@@ -266,3 +249,18 @@ have h1 : (p * q) > 1 := by
     apply Nat.Prime.one_lt hq
   apply Right.one_lt_mul' ppos qpos
 apply Nat.mod_eq_of_lt h1
+
+theorem Inverse_mul_one (a : ℕ)(b : ℕ)(h : Nat.coprime a b)(h1 : b > 1) : (a * (inverse a b h) ) % b = 1 := by
+  rw[inverse]
+  simp
+  split
+  · rename_i h2
+    have neg : Int.natAbs (Nat.xgcd a b).fst = -(Nat.xgcd a b).fst := by
+      apply Int.ofNat_natAbs_of_nonpos
+      apply Int.le_of_lt h2    
+    sorry
+  · rename_i h2 
+    have pos : Int.natAbs (Nat.xgcd a b).fst = (Nat.xgcd a b).fst := by
+      apply Int.natAbs_of_nonneg
+      sorry
+    sorry  

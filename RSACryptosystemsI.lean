@@ -1,7 +1,5 @@
 import Mathlib
 import Init 
-
-
    
 def mod_pow (a : ℕ)(b : ℕ)(n : ℕ)(hneq : n ≠ 0) : ℕ :=
   match b with 
