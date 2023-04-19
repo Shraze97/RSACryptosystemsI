@@ -87,12 +87,12 @@ def pickElemIO [DecidableEq α](l: List α)(p: α → Bool)(h : ∃t : α, t ∈
     return ⟨t, m, h₂⟩
 termination_by _ _ _ l _ _ => l.length  
     
-/-- A random element with a given property from a list. As IO may in principle give an error, we specify a default to fallback and the conditions that this is in the list and has the property `p` -/
+/-- A random element with a given property from a list. As IO may in principle give an error, we specify a default to fallback and the conditions that this is in the list and has the property `p` - Code that we borrowed from Professor Gadgil  -/
 def pickElemD [DecidableEq α](l: List α)(p: α → Bool)(default : α)(h₁ : default ∈ l)(h₂ : p default = true)
   : 
     {t : α // t ∈ l ∧ p t = true} := (pickElemIO l p ⟨default, h₁, h₂⟩).run' () |>.getD ⟨default, h₁, h₂⟩
 
-/--First Filter -/
+/--First Filter which filters out all non-Charmichael Numbers -/
 def first_filter (l : List ℕ): List ℕ  := 
   match l with 
   | []  =>  []
@@ -101,6 +101,14 @@ def first_filter (l : List ℕ): List ℕ  :=
       head :: first_filter tail
     else
       first_filter tail
+#eval first_filter (List.range' 1 100)
+
+/--Theorem which asserts the fact that removing 0 from a list makes the list zeroless-/
+theorem remove_zero (l : List ℕ) : 0 ∉ List.remove 0 l := by 
+  intro contra 
+  rw[List.mem_remove_iff] at contra
+  apply contra.2
+  simp
 
 /--Division Checker -/
 def divides (l : List ℕ)(c : ℕ) : Bool := 
@@ -178,8 +186,10 @@ theorem prime_gen (n : ℕ)(hp : (is_prime n) = true) : Nat.Prime n := by
     · rename_i h₁
       rw[h₁]
       exact Nat.prime_three
-    
-/--outputs minimum Prime in a list-/
+
+
+
+/--outputs minimum Prime in an ordered list-/
 def min_prime_list (l : List ℕ) : ℕ :=
   match l with 
   | [] => 0
@@ -190,6 +200,9 @@ def min_prime_list (l : List ℕ) : ℕ :=
       min_prime_list tail 
 
 
+/--Theorem to check if no prime exists in l-/
+theorem no_prime_in_list (l : List ℕ)(h : l ≠ [])(h0 : 0 ∉ l): min_prime_list l = 0 ↔ ∀ m ∈ l, ¬Nat.Prime m := by
+  sorry
 
 /--Produces the proof that the minimum prime is in the list-/
 theorem min_prime_list_in_list (l : List ℕ)(h : l ≠ []) (h0 : 0 ∉ l )(hmain : min_prime_list l ≠ 0) : min_prime_list l ∈ l := by
@@ -252,11 +265,18 @@ structure Eligible_List where
   hmain : min_prime_list l ≠ 0
   deriving Repr
 
-/-- Picking Out a random Prime from a list of natural numbers -/
+structure Eligible_List' where 
+  l : List ℕ
+  h : l ≠ []
+  h0 : 0 ∉ l
+  hmain : min_prime_list l ≠ 0
+  deriving Repr
+
+/-- Auxilary Function to RandomPrimeGenerator fumction -/
 def RandomPrimeGenerator_aux(el : Eligible_List) : { t : ℕ // t ∈ el.l ∧ is_prime t = true} := 
   pickElemD el.l is_prime (min_prime_list el.l) (min_prime_list_in_list el.l el.h el.h0 el.hmain) (min_prime_list_is_prime el.l el.h el.h0 el.hmain)
 
-/-- -/ 
+/-- Picking Out a random Prime from a list of natural numbers which also outputs the fact that the number is Prime -/
 def RandomPrimeGenerator(el : Eligible_List) : { t : ℕ // t ∈ el.l ∧ Nat.Prime t} := 
   let a := RandomPrimeGenerator_aux el
   ⟨a.val, ⟨ a.property.1, prime_gen (a.val) (a.property.2)⟩ ⟩
