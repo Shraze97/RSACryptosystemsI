@@ -79,8 +79,19 @@ theorem mod_pow_eq (a : ℕ)(b : ℕ)(n : ℕ)(pos: n ≠ 1)(hneq : n ≠ 0): mo
       apply Nat.ModEq.mul_left a H
 termination_by _ _ => b
 decreasing_by
-sorry
-
+rename_i k h_2 h_1 
+rw[← Nat.add_one k] at h_2
+rw[← Nat.add_one (k + 1)] at h_2
+have H1 : k + 1 < b := by
+  simp[h_2]
+have H2 : k / 2 + 1 < b := by
+  simp[h_2]
+  have H2' : k / 2 ≤ k := by
+    apply Nat.div_le_self
+  rw[Nat.lt_succ] 
+  assumption
+try apply H1
+try apply H2
 
 theorem freshman's_dream (a b : ℕ) (hp : Nat.Prime p) : ((a + b) ^ p) % p = (a ^ p + b ^ p) % p := by
   rw[← Nat.ModEq]
