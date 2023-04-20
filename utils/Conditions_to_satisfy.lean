@@ -27,46 +27,49 @@ theorem mod_pow_eq (a : ℕ)(b : ℕ)(n : ℕ)(pos: n ≠ 1)(hneq : n ≠ 0): mo
   split
   · simp     
     rw[Nat.mod_eq_of_lt h1]
-  · simp 
-  · simp 
-    rename_i k
-    rw[← Nat.add_one k]
-    rw[← Nat.add_one (k / 2)]  
-    rw[← Nat.add_one (k + 1)]
-    split 
-    · rw[mod_pow_eq a (k / 2 + 1) n pos hneq]
-      have h : a ^ (k + 1 + 1) = a ^ (k / 2 + 1) * a ^ (k / 2 + 1) := by
+  · simp
+    rename_i k 
+    split
+    · rename_i H
+      rw[← Nat.add_one k] 
+      rw[mod_pow_eq a ((k + 1) / 2) n pos hneq]
+      have h : a ^ (k + 1) = a ^ ((k + 1) / 2) * a ^ ((k + 1) / 2) := by
         rw[← pow_add]
-        have sum : k / 2 + 1 + (k / 2 + 1) = k + 1 + 1 := by
-          rw[← add_assoc]
-          simp
-          rw[add_comm, ← add_assoc]
-          simp 
-          rename_i i
-          have dvd : 2 ∣ k := by
+        have sum : (k + 1) / 2 + (k + 1) / 2 = k + 1 := by
+          have one : 1 % 2 = 1 := by
+            simp
+          have odd : (k + 1) % 2 = 0 := by
+            rw[← one] at H
+            rw[← Nat.ModEq] at H
+            have mod : k + 1 ≡ 0 [MOD 2] := by
+              apply Nat.ModEq.add_right 1 H
+            rw[Nat.ModEq] at mod
+            rw[mod]
+            simp
+          have dvd : 2 ∣ (k + 1) := by
             apply Nat.dvd_of_mod_eq_zero
             assumption
-          have eq : 2 * (k / 2) = k := by
-            rw[Nat.mul_div_cancel_left' dvd]
-          have twice : k / 2 + k / 2 = 2 * (k / 2) := by
-            rw[← Nat.mul_two, Nat.mul_comm]
+          have eq : 2 * ((k + 1)/ 2) = k + 1 := by
+             rw[Nat.mul_div_cancel_left' dvd]
+          have twice : (k + 1) / 2 + (k + 1) / 2 = 2 * ((k + 1) / 2) := by
+             rw[← Nat.mul_two, Nat.mul_comm]
           rw[eq] at twice
           assumption
         rw[sum]
       rw[h]
-      generalize a ^ (k / 2 + 1) = b
+      generalize a ^ ((k + 1) / 2) = b
       rw[← Nat.ModEq]
       have H : (b % n) ≡ b [MOD n] := by
         rw[Nat.ModEq]
         simp
-      apply Nat.ModEq.mul H H   
-      
-    · rw[mod_pow_eq a (k + 1) n pos hneq] 
-      have h : a ^ (k + 1 + 1) = a ^ (k + 1) * a:= by
+      apply Nat.ModEq.mul H H
+    · rw[← Nat.add_one k]
+      rw[mod_pow_eq a k n pos hneq]
+      have h : a ^ (k + 1) = a ^ k * a := by
         rw[pow_add]
         simp
       rw[h]
-      generalize a ^ (k + 1) = b
+      generalize a ^ k = b
       rw[← Nat.ModEq]
       have comm : a * b = b * a := by
         rw[Nat.mul_comm]
@@ -79,15 +82,13 @@ termination_by _ _ => b
 decreasing_by
 rename_i k h_2 h_1 
 rw[← Nat.add_one k] at h_2
-rw[← Nat.add_one (k + 1)] at h_2
-have H1 : k + 1 < b := by
+have H1 : (k + 1) / 2 < b := by
   simp[h_2]
-have H2 : k / 2 + 1 < b := by
+  try apply Nat.div_lt_self
+  simp
+  trivial   
+have H2 : k < b := by
   simp[h_2]
-  have H2' : k / 2 ≤ k := by
-    apply Nat.div_le_self
-  rw[Nat.lt_succ] 
-  assumption
 try apply H1
 try apply H2
 
@@ -264,3 +265,6 @@ theorem Inverse_mul_one (a : ℕ)(b : ℕ)(h : Nat.coprime a b)(h1 : b > 1) : (a
       apply Int.natAbs_of_nonneg
       sorry
     sorry  
+
+theorem cyclic (a : ℕ)(b : ℕ)(c : ℕ)(n : ℕ)(h : b % n = c % n)(lem : a^n = 1)(hneq : n > 1) : a^b = a^c:= by
+sorry

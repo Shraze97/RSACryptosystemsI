@@ -5,7 +5,7 @@ def mod_pow (a : ℕ)(b : ℕ)(n : ℕ)(hneq : n ≠ 0) : ℕ :=
   match b with 
   | 0 => 1
   | Nat.succ k => 
-    if k % 2 = 0 then 
+    if k % 2 = 1 then 
     let c := mod_pow a ((k + 1)/2) n hneq 
     (c * c) % n
   else 
