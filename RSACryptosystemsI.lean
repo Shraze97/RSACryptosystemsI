@@ -24,22 +24,23 @@ have h2 : (k + 1)/2 < k + 1 := by
 try apply h1
 try apply h2
 
--- def inverse (a : ℕ) (b : ℕ)(h : (Nat.gcd a b) = 1) : ℕ :=
-
 def inverse (a : ℕ) (b : ℕ)(h : (Nat.gcd a b) = 1) : ℕ := 
   let (x, _) := Nat.xgcd a b
   if x < 0 then
-    b - ((Int.natAbsHom x) % b)
+    b - ((Int.natAbs x) % b)
   else
-    (Int.natAbsHom x) % b
+    (Int.natAbs x) % b
 
 
 structure Public_key  where 
   n : ℕ 
   e : ℕ 
-  hneq0 : n ≠ 0 
+  hneq0 : n > 1  
   deriving Repr
-#check Public_key 
+theorem gt_1_neq_0 (a : ℕ )(ha : a > 1) : a ≠ 0 := by
+  intro h
+  linarith
+  
 structure Key_pair extends Public_key where
   p : ℕ
   hp : Nat.Prime p
@@ -68,9 +69,9 @@ def key_generation  (a : Key_pair) : Private_key :=
 
 /- The encryption Function-/
 def encryption (a : Public_key) (m : ℕ) : ℕ := 
-  mod_pow m a.e a.n a.hneq0 
+  mod_pow m a.e a.n (gt_1_neq_0 a.n (a.hneq0)) 
 
 
 /- The decryption Function-/
 def decryption (b : Private_key)(me : ℕ) : ℕ := 
-  mod_pow me b.d b.n b.hneq0
+  mod_pow me b.d b.n (gt_1_neq_0 b.n (b.hneq0))

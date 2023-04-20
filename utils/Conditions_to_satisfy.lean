@@ -1,6 +1,7 @@
 import Mathlib
 import RSACryptosystemsI
 
+/-- Proof that mod_pow a b n hneq = (a ^ b) % n -/
 theorem mod_pow_eq (a : ℕ)(b : ℕ)(n : ℕ)(pos: n ≠ 1)(hneq : n ≠ 0): mod_pow a b n hneq = (a ^ b) % n := by
   unfold mod_pow
   have h1 : n > 1 := by
@@ -92,6 +93,7 @@ have H2 : k < b := by
 try apply H1
 try apply H2
 
+/-- Proof of Freshman's Dream: ((a + b) ^ p) % p = (a ^ p + b ^ p) % p using Binomial Theorem.-/
 theorem freshman's_dream (a b : ℕ) (hp : Nat.Prime p) : ((a + b) ^ p) % p = (a ^ p + b ^ p) % p := by
   rw[← Nat.ModEq]
   rw[add_pow]
@@ -132,6 +134,7 @@ theorem freshman's_dream (a b : ℕ) (hp : Nat.Prime p) : ((a + b) ^ p) % p = (a
       assumption
   apply Nat.ModEq.mul_left (a ^ i * b ^ (p - i)) h3
 
+/-- Fermat's Little Theorem: a ^ p ≡ a [MOD p] for prime p.-/
 theorem fermat_little_theorem_mod' (p : ℕ) (hp : Nat.Prime p) (a : ℕ) : a ^ p ≡ a [MOD p] := by
   induction a 
   · simp 
@@ -154,6 +157,7 @@ theorem fermat_little_theorem_mod' (p : ℕ) (hp : Nat.Prime p) (a : ℕ) : a ^ 
        apply Nat.ModEq.add_right _ base
     apply Nat.ModEq.trans h3 h4  
 
+/-- Fermat's Little Theorem: a ^ (p - 1) ≡ 1 [MOD p] for prime p.-/
 theorem fermat_little_theorem_mod (p : ℕ) (hp : Nat.Prime p) (a : ℕ)(hpneqn : ¬(p ∣ a)) : a ^ (p - 1) ≡ 1 [MOD p] := by
   rw[← Nat.Prime.coprime_iff_not_dvd hp] at hpneqn
   rw[Nat.coprime_iff_gcd_eq_one] at hpneqn
@@ -173,6 +177,7 @@ theorem fermat_little_theorem_mod (p : ℕ) (hp : Nat.Prime p) (a : ℕ)(hpneqn 
     assumption 
   apply Nat.ModEq.cancel_left_of_coprime hpneqn lem
 
+/-- Fermat's Little Theorem: a ^ (p - 1) % p = 1 for prime p.-/
 theorem fermat_little_theorem (p : ℕ) (hp : Nat.Prime p) (a : ℕ)(hpneqn : ¬(p ∣ a)) : a ^ (p - 1) % p = 1 := by 
   have h3 : a ^ (p - 1) ≡ 1 [MOD p] := by 
     apply fermat_little_theorem_mod p hp a hpneqn
@@ -185,6 +190,7 @@ theorem fermat_little_theorem (p : ℕ) (hp : Nat.Prime p) (a : ℕ)(hpneqn : ¬
   rw[h5] at h4  
   assumption
 
+/-- RSA Main Theorem: a ^ (lcm (p - 1) (q - 1)) ≡ 1 [MOD p * q] for prime p and q.-/
 theorem RSAMain_mod (p : ℕ) (q : ℕ)(pneqq: p ≠ q)(hp : Nat.Prime p) (hq : Nat.Prime q)(a : ℕ)(hpneqdiva : ¬(p ∣ a))(hqneqdiva : ¬(q ∣ a)) : a ^ (Nat.lcm (p - 1) (q - 1)) ≡ 1 [MOD p * q]:= by
 have H1 : ((p - 1) ∣ Nat.lcm (p - 1) (q - 1)) := by
   apply Nat.dvd_lcm_left
@@ -241,6 +247,7 @@ have h5 : a ^ Nat.lcm (p - 1) (q - 1) ≡ 1 [MOD p * q] := by
 
 assumption
 
+/-- RSA Main Theorem: a ^ (lcm (p - 1) (q - 1)) % (p * q) = 1 for primes p and q.-/
 theorem RSAMain (p : ℕ) (q : ℕ)(pneqq: p ≠ q)(hp : Nat.Prime p) (hq : Nat.Prime q)(a : ℕ)(hpneqdiva : ¬(p ∣ a))(hqneqdiva : ¬(q ∣ a)) : a ^ (Nat.lcm (p - 1) (q - 1)) % (p * q) = 1 := by
 rw[RSAMain_mod p q pneqq hp hq a hpneqdiva hqneqdiva]
 have h1 : (p * q) > 1 := by
@@ -251,6 +258,7 @@ have h1 : (p * q) > 1 := by
   apply Right.one_lt_mul' ppos qpos
 apply Nat.mod_eq_of_lt h1
 
+/-- Proof of correctness of inverse function.-/
 theorem Inverse_mul_one (a : ℕ)(b : ℕ)(h : Nat.coprime a b)(h1 : b > 1) : (a * (inverse a b h) ) % b = 1 := by
   rw[inverse]
   simp
@@ -266,5 +274,23 @@ theorem Inverse_mul_one (a : ℕ)(b : ℕ)(h : Nat.coprime a b)(h1 : b > 1) : (a
       sorry
     sorry  
 
-theorem cyclic (a : ℕ)(b : ℕ)(c : ℕ)(n : ℕ)(h : b % n = c % n)(lem : a^n = 1)(hneq : n > 1) : a^b = a^c:= by
-sorry
+/-- If a ^ n = 1, then a ^ b is the same as a ^ c if n∣(c - b) -/
+theorem cyclic (a : ℕ)(b : ℕ)(c : ℕ)(n : ℕ)(h : b % n = c % n)(lem : a ^ n = 1)(hneq : n > 1) : a ^ b = a ^ c := by
+  have H: a ^ b = a ^ (b % n) := by
+    apply pow_eq_pow_mod b lem
+  have H': a ^ c = a ^ (c % n) := by
+    apply pow_eq_pow_mod c lem 
+  rw[h] at H
+  rw[← H] at H' 
+  exact H'.symm
+
+/-- decryption of an encrypted data -/
+def message' (b : Private_key)(m : ℕ) : ℕ := decryption b (encryption b.toPublic_key m) 
+
+/-- Proof that decryption is correct-/
+theorem cipher_correct (b : Private_key)(m : ℕ) : message' b m = m := by
+  rw[message']
+  rw[decryption]
+  rw[mod_pow_eq]
+  
+  sorry
