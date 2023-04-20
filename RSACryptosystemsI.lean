@@ -37,6 +37,7 @@ structure Public_key  where
   e : ℕ 
   hneq0 : n > 1  
   deriving Repr
+
 theorem gt_1_neq_0 (a : ℕ )(ha : a > 1) : a ≠ 0 := by
   intro h
   linarith
@@ -52,7 +53,7 @@ structure Key_pair extends Public_key where
   deriving Repr
 
 /- The key generation Function-/
-def value_d(a : Key_pair) : ℕ   :=
+def value_d (a : Key_pair) : ℕ :=
   let d := inverse a.e (Nat.lcm (a.p - 1) (a.q - 1)) a.he.right
   d
 

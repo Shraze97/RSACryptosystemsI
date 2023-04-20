@@ -259,7 +259,7 @@ have h1 : (p * q) > 1 := by
 apply Nat.mod_eq_of_lt h1
 
 /-- Proof of correctness of inverse function.-/
-theorem Inverse_mul_one (a : ℕ)(b : ℕ)(h : Nat.coprime a b)(h1 : b > 1) : (a * (inverse a b h) ) % b = 1 := by
+theorem Inverse_mul_one (a : ℕ)(b : ℕ)(h : Nat.coprime a b)(h1 : b > 1) : (a * (inverse a b h) ) % b = 1 % b:= by
   rw[inverse]
   simp
   split
@@ -275,22 +275,126 @@ theorem Inverse_mul_one (a : ℕ)(b : ℕ)(h : Nat.coprime a b)(h1 : b > 1) : (a
     sorry  
 
 /-- If a ^ n = 1, then a ^ b is the same as a ^ c if n∣(c - b) -/
-theorem cyclic (a : ℕ)(b : ℕ)(c : ℕ)(n : ℕ)(h : b % n = c % n)(lem : a ^ n = 1)(hneq : n > 1) : a ^ b = a ^ c := by
-  have H: a ^ b = a ^ (b % n) := by
-    apply pow_eq_pow_mod b lem
-  have H': a ^ c = a ^ (c % n) := by
-    apply pow_eq_pow_mod c lem 
+theorem cyclic (a : ℕ)(b : ℕ)(c : ℕ)(n : ℕ)(m : ℕ)(h : b % n = c % n)(lem : a ^ n ≡ 1 [MOD m])(hneq : n > 1) : a ^ b ≡ a ^ c [MOD m]:= by
+  have euclid' : n * (b / n) + (b % n) = b := by
+    apply Nat.div_add_mod b n
+  have euclid : b = n * (b / n) + (b % n) := by
+    rw[euclid']
+
+  have Euclid' : n * (c / n) + (c % n) = c := by
+    apply Nat.div_add_mod c n
+  have Euclid : c = n * (c / n) + (c % n) := by
+    rw[Euclid']
+  
+  have H: a ^ b ≡ a ^ (b % n) [MOD m] := by
+    nth_rewrite 1[euclid]
+    rw[pow_add]
+    rw[pow_mul]
+    have lem' : (a ^ n) ^ (b / n) ≡ 1 [MOD m] := by
+      have obv : 1 = 1 ^ (b / n) := by
+        simp
+      rw[obv]
+      apply Nat.ModEq.pow (b / n) lem
+    have trv : a ^ (b % n) = 1 * a ^ (b % n) := by
+      simp
+    nth_rewrite 2[trv]
+    apply Nat.ModEq.mul_right (a ^ (b % n)) lem'
+  
+  have H': a ^ c ≡ a ^ (c % n) [MOD m] := by
+    nth_rewrite 1[Euclid]
+    rw[pow_add]
+    rw[pow_mul]
+    have lem' : (a ^ n) ^ (c / n) ≡ 1 [MOD m] := by
+      have obv : 1 = 1 ^ (c / n) := by
+        simp
+      rw[obv]
+      apply Nat.ModEq.pow (c / n) lem
+    have trv : a ^ (c % n) = 1 * a ^ (c % n) := by
+      simp
+    nth_rewrite 2[trv]
+    apply Nat.ModEq.mul_right (a ^ (c % n)) lem'
+
   rw[h] at H
-  rw[← H] at H' 
-  exact H'.symm
+  have H'' : a ^ (c % n) ≡ a ^ c [MOD m] := by
+    apply Nat.ModEq.symm H' 
+  apply Nat.ModEq.trans H H''
 
 /-- decryption of an encrypted data -/
 def message' (b : Private_key)(m : ℕ) : ℕ := decryption b (encryption b.toPublic_key m) 
 
 /-- Proof that decryption is correct-/
-theorem cipher_correct (b : Private_key)(m : ℕ) : message' b m = m := by
+theorem cipher_correct (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : ¬(b.p ∣ m))(hqneqdiva : ¬(b.q ∣ m)) : message' b m = m := by
+
+  have lcm_pos : Nat.lcm (b.p - 1) (b.q - 1) > 1 := by
+    have pos : (b.p - 1) > 1 ∨ (b.q - 1) > 1 := by
+      by_cases lem : (b.p - 1) > 1
+      · exact Or.inl lem
+      · have bp2 : b.p = 2 := by
+          sorry
+        have bq2 : b.q > 2 := by
+          have neq2 : 2 ≠ b.q := by 
+            rw[← bp2]
+            apply b.ho  
+          sorry
+        have right : b.q - 1 > 1 := by
+          have : 2 = 1 + 1 := by simp
+          rw[this] at bq2
+          have : b.q - 1 = Nat.pred b.q := by 
+            trivial
+          rw[this]
+          have : Nat.succ 1 = 1 + 1 := by simp
+          rw[← this] at bq2
+          apply LT.lt.gt
+          have :  Nat.succ 1 < b.q := by
+            apply LT.lt.gt bq2
+          rw[Nat.lt_pred_iff]
+          apply this
+        exact Or.inr right 
+    have div_1 : (b.p - 1) ∣ Nat.lcm (b.p - 1) (b.q - 1) := by
+      apply Nat.dvd_lcm_left
+    have div_2 : (b.q - 1) ∣ Nat.lcm (b.p - 1) (b.q - 1) := by
+      apply Nat.dvd_lcm_right
+    cases pos
+    · 
+      sorry
+    · 
+      sorry
+
   rw[message']
   rw[decryption]
   rw[mod_pow_eq]
-  
-  sorry
+  set n := b.toKey_pair.toPublic_key.n with hn
+  set a := b.toKey_pair.toPublic_key with ha
+  rw[encryption]
+  rw[mod_pow_eq]
+  rw[← hn, ←Nat.pow_mod, ←pow_mul]
+  have H : m ^ (a.e * b.d) ≡ m [MOD n] := by
+    have h1 : a.e * b.d % Nat.lcm (b.p - 1) (b.q - 1) = 1 % Nat.lcm (b.p - 1) (b.q - 1):= by
+      have inv : b.d = inverse a.e (Nat.lcm (b.p - 1) (b.q - 1)) (b.he.right) := by
+        rw[b.hd] 
+        rw[value_d]
+      rw[inv]  
+      apply Inverse_mul_one (a.e) (Nat.lcm (b.p - 1) (b.q - 1)) (b.he.right) lcm_pos
+    have h2 : m ^ Nat.lcm (b.p - 1) (b.q - 1) ≡ 1 [MOD n] := by
+      have : n = b.p * b.q := by
+        rw[hn, b.hn]
+      rw[this]
+      apply RSAMain_mod b.p b.q b.ho b.hp b.hq m hpneqdiva hqneqdiva
+    have obv : m ^ 1 = m := by
+      simp
+    nth_rewrite 2[← obv]
+    apply cyclic m (a.e * b.d) 1 (Nat.lcm (b.p - 1) (b.q - 1)) n h1 h2 lcm_pos 
+  rw[Nat.ModEq] at H
+  have legit' : m % n = m := by
+    apply Nat.mod_eq_of_lt legit
+  rw[legit'] at H
+  assumption
+  exact Nat.ne_of_gt (a.hneq0)
+  exact Nat.ne_of_gt (b.toKey_pair.toPublic_key.hneq0)
+
+#check Nat.le_of_dvd
+#check Nat.lcm_pos
+#check Nat.eq_of_lt_succ_of_not_lt 
+#check lt_sub_left_of_add_lt
+#check pow_eq_pow_mod
+#check Nat.lt_or_ge
