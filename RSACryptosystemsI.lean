@@ -1,17 +1,15 @@
 import Mathlib
 import Init 
-
-
-/--Modular Exponentiation using binary exponentiation -/
-def mod_pow (a : ℕ)(b : ℕ)(n : ℕ): ℕ :=
+   
+def mod_pow (a : ℕ)(b : ℕ)(n : ℕ)(hneq : n ≠ 0) : ℕ :=
   match b with 
   | 0 => 1
   | Nat.succ k => 
-    if k % 2 = 0 then 
-    let c := mod_pow a ((k + 1)/2) n 
+    if k % 2 = 1 then 
+    let c := mod_pow a ((k + 1)/2) n hneq 
     (c * c) % n
   else 
-    (a * (mod_pow a k n )) % n
+    (a * (mod_pow a k n hneq)) % n
 termination_by _ _ => b
 decreasing_by      
 simp
@@ -26,10 +24,9 @@ have h2 : (k + 1)/2 < k + 1 := by
 try apply h1
 try apply h2
 
-
 -- def inverse (a : ℕ) (b : ℕ)(h : (Nat.gcd a b) = 1) : ℕ :=
 
-def inverse (a : ℕ) (b : ℕ): ℕ := 
+def inverse (a : ℕ) (b : ℕ)(h : (Nat.gcd a b) = 1) : ℕ := 
   let (x, _) := Nat.xgcd a b
   if x < 0 then
     b - ((Int.natAbs x) % b)
@@ -55,7 +52,7 @@ structure Key_pair extends Public_key where
 
 /- The key generation Function-/
 def value_d(a : Key_pair) : ℕ   :=
-  let d := inverse a.e (Nat.lcm (a.p - 1) (a.q - 1)) 
+  let d := inverse a.e (Nat.lcm (a.p - 1) (a.q - 1)) a.he.right
   d
 
 structure Private_key extends Key_pair where
@@ -71,9 +68,9 @@ def key_generation  (a : Key_pair) : Private_key :=
 
 /- The encryption Function-/
 def encryption (a : Public_key) (m : ℕ) : ℕ := 
-  mod_pow m a.e a.n 
+  mod_pow m a.e a.n a.hneq0 
 
 
 /- The decryption Function-/
 def decryption (b : Private_key)(me : ℕ) : ℕ := 
-  mod_pow me b.d b.n 
+  mod_pow me b.d b.n b.hneq0
