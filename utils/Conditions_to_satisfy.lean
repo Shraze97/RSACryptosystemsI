@@ -413,39 +413,42 @@ theorem cipher_correct (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : �
             apply LT.lt.gt bq2
           rw[Nat.lt_pred_iff]
           apply this
-        exact Or.inr right 
-    have div_1 : (b.p - 1) ∣ Nat.lcm (b.p - 1) (b.q - 1) := by
-      apply Nat.dvd_lcm_left
-    have div_2 : (b.q - 1) ∣ Nat.lcm (b.p - 1) (b.q - 1) := by
-      apply Nat.dvd_lcm_right
+        exact Or.inr right
 
-    have ppos : (b.p - 1) > 0 := by
+    have ppos : (b.p - 1) ≠ 0 := by
       have : b.p > 1 := by
         apply Nat.Prime.one_lt b.hp
-      have : b.p - 1 = Nat.pred b.p := by
-        trivial
-      rw[this]
-      have : Nat.succ 1 = 1 + 1 := by simp
-      rw[← this] at this
-      apply LT.lt.gt
-      
+      simp
+      apply this
+    have qpos : (b.q - 1) ≠ 0 := by
+      have : b.q > 1 := by
+        apply Nat.Prime.one_lt b.hq
+      simp
+      apply this
 
     cases pos
     · rename_i h
       have : Nat.lcm (b.p - 1) (b.q - 1) ≥ (b.p - 1) := by
         apply Nat.le_of_dvd 
         have : Nat.lcm (b.p - 1) (b.q - 1) ≠ 0 := by
-          apply Nat.lcm_ne_zero b.hp.ne_zero b.hq.ne_zero
-        sorry 
-      sorry
+          apply Nat.lcm_ne_zero ppos qpos
+        apply Nat.pos_of_ne_zero this
+        apply Nat.dvd_lcm_left
+      linarith 
     · rename_i h
-      sorry
+      have : Nat.lcm (b.p - 1) (b.q - 1) ≥ (b.q - 1) := by
+        apply Nat.le_of_dvd 
+        have : Nat.lcm (b.p - 1) (b.q - 1) ≠ 0 := by
+          apply Nat.lcm_ne_zero ppos qpos
+        apply Nat.pos_of_ne_zero this
+        apply Nat.dvd_lcm_right
+      linarith
 
   rw[message']
   rw[decryption]
   rw[mod_pow_eq]
   set n := b.toKey_pair.toPublic_key.n with hn
-  set a := b.toKey_pair.toPublic_key with ha
+  set a := b.toKey_pair.toPublic_key
   rw[encryption]
   rw[mod_pow_eq]
   rw[← hn, ←Nat.pow_mod, ←pow_mul]
