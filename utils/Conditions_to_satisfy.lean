@@ -425,7 +425,7 @@ theorem cipher_correct (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : �
         apply Nat.Prime.one_lt b.hq
       simp
       apply this
-
+  
     cases pos
     · rename_i h
       have : Nat.lcm (b.p - 1) (b.q - 1) ≥ (b.p - 1) := by
@@ -476,11 +476,60 @@ theorem cipher_correct (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : �
   exact Nat.ne_of_gt (a.hneq0)
   exact Nat.ne_of_gt (b.toKey_pair.toPublic_key.hneq0)
 
-#check Nat.le_of_dvd
-#check Nat.lcm_pos
-#check Nat.eq_of_lt_succ_of_not_lt 
-#check lt_sub_left_of_add_lt
-#check pow_eq_pow_mod
-#check Nat.lt_or_ge
-#check Nat.eq_or_lt_of_le
+theorem pq_both_not_dvd (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : b.p ∣ m) : ¬ (q ∣ m) := by
+sorry
+
+theorem cipher_correct' (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : b.p ∣ m) : message' b m = m := by
+  rw[message']
+  rw[decryption]
+  rw[mod_pow_eq]
+  set n := b.toKey_pair.toPublic_key.n with hn
+  set a := b.toKey_pair.toPublic_key
+  rw[encryption]
+  rw[mod_pow_eq]
+  rw[← hn, ←Nat.pow_mod, ←pow_mul]
+
+  have Hp : m ^ (a.e * b.d) ≡ m [MOD b.p] := by
+    have dvd : b.p ∣ m ^ (a.e * b.d) := by
+      apply dvd_pow
+      apply hpneqdiva
+      sorry
+    have h1 : m ^ (a.e * b.d) ≡ 0 [MOD b.p] := by
+      apply Nat.mod_eq_zero_of_dvd dvd
+    have h2 : m ≡ 0 [MOD b.p] := by
+      apply Nat.mod_eq_zero_of_dvd hpneqdiva
+    rw[Nat.ModEq.comm] at h2
+    apply Nat.ModEq.trans h1 h2
+  
+  have Hq : m ^ (a.e * b.d) ≡ m [MOD b.q] := by
+    have : (a.e * b.d) = (a.e * b.d - 1) + 1 := by
+      rw[add_assoc]
+    sorry
+
+  have H : m ^ (a.e * b.d) ≡ m [MOD n] := by
+    have : n = b.p * b.q := by
+      rw[hn, b.hn]
+    rw[this]
+    have hpq : Nat.coprime b.p b.q := by
+      rw[Nat.coprime_primes]
+      apply b.ho 
+      apply b.hp
+      apply b.hq
+    have Hpq : m ^ (a.e * b.d) ≡ m [MOD b.p] ∧ m ^ (a.e * b.d) ≡ m [MOD b.q] := by
+      apply And.intro 
+      assumption
+      assumption
+    rw[Nat.modEq_and_modEq_iff_modEq_mul hpq] at Hpq
+    assumption
+
+  rw[Nat.ModEq] at H
+  have legit' : m % n = m := by
+    apply Nat.mod_eq_of_lt legit
+  rw[legit'] at H
+  assumption
+  exact Nat.ne_of_gt (a.hneq0)
+  exact Nat.ne_of_gt (b.toKey_pair.toPublic_key.hneq0)
+
+
+#check Nat.modEq_and_modEq_iff_modEq_mul  
 
