@@ -517,7 +517,14 @@ theorem cipher_correct' (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : 
         sorry
       have : (a.e * b.d - 1) = (b.q - 1) * ((a.e * b.d - 1) / (b.q - 1)) := by
         rw[Nat.mul_div_cancel' this]
-      sorry
+      rw[this]
+      rw[pow_mul]
+      have : 1 = 1 ^ ((a.e * b.d - 1) / (b.q - 1)) := by
+        simp
+      nth_rewrite 4[this]
+      apply Nat.ModEq.pow 
+      apply fermat
+      
     have mod_1' : m ^ (a.e * b.d - 1) * m ≡ 1 * m [MOD b.q] := by
       apply Nat.ModEq.mul_right m mod_1
     have : 1 * m = m := by simp
