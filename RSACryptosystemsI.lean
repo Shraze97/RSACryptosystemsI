@@ -24,8 +24,6 @@ have h2 : (k + 1)/2 < k + 1 := by
 try apply h1
 try apply h2
 
--- def inverse (a : ℕ) (b : ℕ)(h : (Nat.gcd a b) = 1) : ℕ :=
-
 def inverse (a : ℕ) (b : ℕ)(h : (Nat.gcd a b) = 1) : ℕ := 
   let (x, _) := Nat.xgcd a b
   if x < 0 then
@@ -37,9 +35,13 @@ def inverse (a : ℕ) (b : ℕ)(h : (Nat.gcd a b) = 1) : ℕ :=
 structure Public_key  where 
   n : ℕ 
   e : ℕ 
-  hneq0 : n ≠ 0 
+  hneq0 : n > 1  
   deriving Repr
-#check Public_key 
+
+theorem gt_1_neq_0 (a : ℕ )(ha : a > 1) : a ≠ 0 := by
+  intro h
+  linarith
+  
 structure Key_pair extends Public_key where
   p : ℕ
   hp : Nat.Prime p
@@ -51,7 +53,7 @@ structure Key_pair extends Public_key where
   deriving Repr
 
 /- The key generation Function-/
-def value_d(a : Key_pair) : ℕ   :=
+def value_d (a : Key_pair) : ℕ :=
   let d := inverse a.e (Nat.lcm (a.p - 1) (a.q - 1)) a.he.right
   d
 
@@ -68,9 +70,9 @@ def key_generation  (a : Key_pair) : Private_key :=
 
 /- The encryption Function-/
 def encryption (a : Public_key) (m : ℕ) : ℕ := 
-  mod_pow m a.e a.n a.hneq0 
+  mod_pow m a.e a.n (gt_1_neq_0 a.n (a.hneq0)) 
 
 
 /- The decryption Function-/
 def decryption (b : Private_key)(me : ℕ) : ℕ := 
-  mod_pow me b.d b.n b.hneq0
+  mod_pow me b.d b.n (gt_1_neq_0 b.n (b.hneq0))
