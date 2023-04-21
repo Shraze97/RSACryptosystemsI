@@ -514,7 +514,12 @@ theorem cipher_correct' (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : 
         apply b.hq
         apply pq_both_not_dvd b m legit hpneqdiva
       have : (b.q - 1) ∣ (a.e * b.d - 1) := by
-        sorry
+        have : a.e * b.d ≡ 1 [MOD (b.q - 1)] := by
+          sorry
+        have : a.e * b.d - 1 ≡ 0 [MOD (b.q - 1)] := by
+          sorry
+        rw[Nat.modEq_zero_iff_dvd] at this
+        assumption
       have : (a.e * b.d - 1) = (b.q - 1) * ((a.e * b.d - 1) / (b.q - 1)) := by
         rw[Nat.mul_div_cancel' this]
       rw[this]
@@ -524,7 +529,7 @@ theorem cipher_correct' (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : 
       nth_rewrite 4[this]
       apply Nat.ModEq.pow 
       apply fermat
-      
+
     have mod_1' : m ^ (a.e * b.d - 1) * m ≡ 1 * m [MOD b.q] := by
       apply Nat.ModEq.mul_right m mod_1
     have : 1 * m = m := by simp
