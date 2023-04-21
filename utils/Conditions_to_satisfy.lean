@@ -502,9 +502,23 @@ theorem cipher_correct' (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : 
     apply Nat.ModEq.trans h1 h2
   
   have Hq : m ^ (a.e * b.d) ≡ m [MOD b.q] := by
-    have : (a.e * b.d) = (a.e * b.d - 1) + 1 := by
-      rw[add_assoc]
-    sorry
+    have trv : a.e * b.d = a.e * b.d - 1 + 1 := by
+      rw[Nat.sub_add_cancel]
+      sorry
+    rw[trv]
+    rw[pow_add]
+    rw[pow_one]
+    have mod_1 : m ^ (a.e * b.d - 1) ≡ 1 [MOD b.q] := by
+      have fermat : m ^ (b.q - 1) ≡ 1 [MOD b.q] := by
+        apply fermat_little_theorem_mod
+        apply b.hq
+        apply pq_both_not_dvd b m legit hpneqdiva
+      sorry
+    have mod_1' : m ^ (a.e * b.d - 1) * m ≡ 1 * m [MOD b.q] := by
+      apply Nat.ModEq.mul_right m mod_1
+    have : 1 * m = m := by simp
+    rw[this] at mod_1'
+    apply mod_1'
 
   have H : m ^ (a.e * b.d) ≡ m [MOD n] := by
     have : n = b.p * b.q := by
