@@ -259,20 +259,64 @@ have h1 : (p * q) > 1 := by
 apply Nat.mod_eq_of_lt h1
 
 /-- Proof of correctness of inverse function.-/
-theorem Inverse_mul_one (a : ℕ)(b : ℕ)(h : Nat.coprime a b)(h1 : b > 1) : (a * (inverse a b h) ) % b = 1 % b:= by
+theorem Inverse_mul_one (a : ℕ)(b : ℕ)(h : Nat.coprime a b)(h1 : b > 1) : (a * (inverse a b h) ) % b = 1 % b := by
   rw[inverse]
   simp
-  split
+  split 
   · rename_i h2
     have neg : Int.natAbs (Nat.xgcd a b).fst = -(Nat.xgcd a b).fst := by
       apply Int.ofNat_natAbs_of_nonpos
       apply Int.le_of_lt h2    
-    sorry
+    zify 
+    rw[Nat.cast_sub,mul_sub_left_distrib]
+    simp 
+    rw[Int.coe_natAbs] at neg
+    rw[neg]
+    rw[← Int.ModEq]
+    have h3 : a*b ≡ 0 [ZMOD b] := by
+      rw[← Int.mul_zero a]
+      have h4 : a ≡ a [ZMOD b] := by
+        exact Int.ModEq.rfl
+      apply Int.ModEq.mul_left
+      rw[Int.modEq_zero_iff_dvd]
+    rw[Int.sub_eq_add_neg]
+    rw[← zero_add 1] 
+    apply Int.ModEq.add h3 
+    rw[Int.ModEq]
+    rw[← neg_mul]
+    rw[Int.mul_emod,Int.emod_emod, ←Int.mul_emod,mul_neg,neg_mul,neg_neg]
+    rw[← Nat.gcdA]
+    have h4 : (Nat.gcd a b) = a * Nat.gcdA a b + b * Nat.gcdB a b := by 
+      apply Nat.gcd_eq_gcd_ab a b
+    rw[Nat.coprime] at h
+    rw[h] at h4 
+    have lem : a * Nat.gcdA a b % b = (a * Nat.gcdA a b + b * Nat.gcdB a b) % b := by 
+      exact (Int.add_mul_emod_self_left (a * Nat.gcdA a b) b (Nat.gcdB a b)).symm
+    rw[lem]
+    rw[← h4]
+    simp
+    have lem : b > 0 := by linarith
+    set r := Int.natAbs (Nat.xgcd a b).fst with ha
+    apply le_of_lt
+    exact Nat.mod_lt r lem
   · rename_i h2 
     have pos : Int.natAbs (Nat.xgcd a b).fst = (Nat.xgcd a b).fst := by
       apply Int.natAbs_of_nonneg
-      sorry
-    sorry  
+      linarith
+    zify
+    zify at pos
+    rw[pos]
+    rw[Int.mul_emod,Int.emod_emod, ←Int.mul_emod]
+    rw[← Nat.gcdA]
+    have h4 : (Nat.gcd a b) = a * Nat.gcdA a b + b * Nat.gcdB a b := by 
+      apply Nat.gcd_eq_gcd_ab a b
+    rw[Nat.coprime] at h
+    rw[h] at h4 
+    have lem : a * Nat.gcdA a b % b = (a * Nat.gcdA a b + b * Nat.gcdB a b) % b := by 
+      exact (Int.add_mul_emod_self_left (a * Nat.gcdA a b) b (Nat.gcdB a b)).symm
+    rw[lem]
+    rw[← h4]
+    simp 
 
 /-- If a ^ n = 1, then a ^ b is the same as a ^ c if n∣(c - b) -/
 theorem cyclic (a : ℕ)(b : ℕ)(c : ℕ)(n : ℕ)(m : ℕ)(h : b % n = c % n)(lem : a ^ n ≡ 1 [MOD m])(hneq : n > 1) : a ^ b ≡ a ^ c [MOD m]:= by
@@ -322,6 +366,15 @@ theorem cyclic (a : ℕ)(b : ℕ)(c : ℕ)(n : ℕ)(m : ℕ)(h : b % n = c % n)(
 /-- decryption of an encrypted data -/
 def message' (b : Private_key)(m : ℕ) : ℕ := decryption b (encryption b.toPublic_key m) 
 
+theorem Prime.three_le_of_ne_two {p : ℕ} (hp : p.Prime) (h_two : 2 ≠ p) : 3 ≤ p := by
+  by_contra' h
+  revert h_two hp
+  match p with
+  | 0 => decide
+  | 1 => decide
+  | 2 => decide
+  | n + 3 => exact (h.not_le le_add_self).elim
+
 /-- Proof that decryption is correct-/
 theorem cipher_correct (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : ¬(b.p ∣ m))(hqneqdiva : ¬(b.q ∣ m)) : message' b m = m := by
 
@@ -330,12 +383,23 @@ theorem cipher_correct (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : �
       by_cases lem : (b.p - 1) > 1
       · exact Or.inl lem
       · have bp2 : b.p = 2 := by
-          sorry
+          simp at lem
+          have : 1 + 1 = 2 := by simp
+          rw[this] at lem
+          have : b.p ≥ 2 := by 
+            apply Nat.Prime.two_le b.hp
+          simp at this
+          have : b.p = 2 := by
+            apply Nat.le_antisymm lem this
+          assumption
         have bq2 : b.q > 2 := by
           have neq2 : 2 ≠ b.q := by 
             rw[← bp2]
             apply b.ho  
-          sorry
+          have : 3 ≤ b.q := by
+            apply Prime.three_le_of_ne_two b.hq neq2 
+          apply LT.lt.gt
+          apply this         
         have right : b.q - 1 > 1 := by
           have : 2 = 1 + 1 := by simp
           rw[this] at bq2
@@ -354,10 +418,27 @@ theorem cipher_correct (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : �
       apply Nat.dvd_lcm_left
     have div_2 : (b.q - 1) ∣ Nat.lcm (b.p - 1) (b.q - 1) := by
       apply Nat.dvd_lcm_right
+
+    have ppos : (b.p - 1) > 0 := by
+      have : b.p > 1 := by
+        apply Nat.Prime.one_lt b.hp
+      have : b.p - 1 = Nat.pred b.p := by
+        trivial
+      rw[this]
+      have : Nat.succ 1 = 1 + 1 := by simp
+      rw[← this] at this
+      apply LT.lt.gt
+      
+
     cases pos
-    · 
+    · rename_i h
+      have : Nat.lcm (b.p - 1) (b.q - 1) ≥ (b.p - 1) := by
+        apply Nat.le_of_dvd 
+        have : Nat.lcm (b.p - 1) (b.q - 1) ≠ 0 := by
+          apply Nat.lcm_ne_zero b.hp.ne_zero b.hq.ne_zero
+        sorry 
       sorry
-    · 
+    · rename_i h
       sorry
 
   rw[message']
@@ -398,3 +479,5 @@ theorem cipher_correct (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : �
 #check lt_sub_left_of_add_lt
 #check pow_eq_pow_mod
 #check Nat.lt_or_ge
+#check Nat.eq_or_lt_of_le
+
