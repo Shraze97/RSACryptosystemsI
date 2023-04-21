@@ -513,6 +513,10 @@ theorem cipher_correct' (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : 
         apply fermat_little_theorem_mod
         apply b.hq
         apply pq_both_not_dvd b m legit hpneqdiva
+      have : (b.q - 1) ∣ (a.e * b.d - 1) := by
+        sorry
+      have : (a.e * b.d - 1) = (b.q - 1) * ((a.e * b.d - 1) / (b.q - 1)) := by
+        rw[Nat.mul_div_cancel' this]
       sorry
     have mod_1' : m ^ (a.e * b.d - 1) * m ≡ 1 * m [MOD b.q] := by
       apply Nat.ModEq.mul_right m mod_1
