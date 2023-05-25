@@ -311,6 +311,8 @@ structure Eligible_List where
 def Eligible_List_generator(l : List ℕ) : Eligible_List:=
   let l1 := first_filter l
   let l2 := List.remove 0 l1
+  let h0 := remove_zero l2
+  sorry
   
     
   
