@@ -318,6 +318,8 @@ theorem Inverse_mul_one (a : ℕ)(b : ℕ)(h : Nat.coprime a b)(h1 : b > 1) : (a
     rw[← h4]
     simp 
 
+lemma aux_mod (b : ℕ )(hb : b > 1) : 1 % b = 1 := by
+  rw[Nat.mod_eq_of_lt hb]
 /-- If a ^ n = 1, then a ^ b is the same as a ^ c if n∣(c - b) -/
 theorem cyclic (a : ℕ)(b : ℕ)(c : ℕ)(n : ℕ)(m : ℕ)(h : b % n = c % n)(lem : a ^ n ≡ 1 [MOD m])(hneq : n > 1) : a ^ b ≡ a ^ c [MOD m]:= by
   have euclid' : n * (b / n) + (b % n) = b := by
@@ -357,7 +359,6 @@ theorem cyclic (a : ℕ)(b : ℕ)(c : ℕ)(n : ℕ)(m : ℕ)(h : b % n = c % n)(
       simp
     nth_rewrite 2[trv]
     apply Nat.ModEq.mul_right (a ^ (c % n)) lem'
-
   rw[h] at H
   have H'' : a ^ (c % n) ≡ a ^ c [MOD m] := by
     apply Nat.ModEq.symm H' 
@@ -377,7 +378,6 @@ theorem Prime.three_le_of_ne_two {p : ℕ} (hp : p.Prime) (h_two : 2 ≠ p) : 3 
 
 /-- Proof that decryption is correct-/
 theorem cipher_correct (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : ¬(b.p ∣ m))(hqneqdiva : ¬(b.q ∣ m)) : message' b m = m := by
-
   have lcm_pos : Nat.lcm (b.p - 1) (b.q - 1) > 1 := by
     have pos : (b.p - 1) > 1 ∨ (b.q - 1) > 1 := by
       by_cases lem : (b.p - 1) > 1
@@ -414,7 +414,6 @@ theorem cipher_correct (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : �
           rw[Nat.lt_pred_iff]
           apply this
         exact Or.inr right
-
     have ppos : (b.p - 1) ≠ 0 := by
       have : b.p > 1 := by
         apply Nat.Prime.one_lt b.hp
@@ -424,8 +423,7 @@ theorem cipher_correct (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : �
       have : b.q > 1 := by
         apply Nat.Prime.one_lt b.hq
       simp
-      apply this
-    
+      apply this    
     cases pos
     · rename_i h
       have : Nat.lcm (b.p - 1) (b.q - 1) ≥ (b.p - 1) := by
@@ -443,7 +441,6 @@ theorem cipher_correct (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : �
         apply Nat.pos_of_ne_zero this
         apply Nat.dvd_lcm_right
       linarith
-
   rw[message']
   rw[decryption]
   rw[mod_pow_eq]
@@ -594,15 +591,6 @@ lemma phi_inequality(p : ℕ )(q : ℕ)(hp : Nat.Prime p)(hq : Nat.Prime q )(ho 
     apply Nat.sub_le_sub_right
     exact h3
     
-        
-
-    -- cases lt_or_gt_of_ne ho
-    -- · exact le_of_lt (Nat.lcm_pos_of_pos_left (q - 1) (Nat.sub_pos_of_lt hq))
-    -- · exact le_of_lt (Nat.lcm_pos_of_pos_right (p - 1) (Nat.sub_pos_of_lt hp))
-
-
-
-
 theorem cipher_correct' (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : b.p ∣ m)(h0 : m > 0) : message' b m = m := by
   rw[message']
   rw[decryption]
@@ -612,7 +600,6 @@ theorem cipher_correct' (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : 
   rw[encryption]
   rw[mod_pow_eq]
   rw[← hn, ←Nat.pow_mod, ←pow_mul]
-
   have Hp : m ^ (a.e * b.d) ≡ m [MOD b.p] := by
     have dvd : b.p ∣ m ^ (a.e * b.d) := by
       apply dvd_pow
@@ -661,9 +648,36 @@ theorem cipher_correct' (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : 
         exact h0
       have : (b.q - 1) ∣ (a.e * b.d - 1) := by
         have : a.e * b.d ≡ 1 [MOD (b.q - 1)] := by
-          sorry
+          rw[b.hd,value_d]
+          simp
+          apply Nat.ModEq.of_dvd (Nat.dvd_lcm_right (b.p-1) (b.q-1)) 
+          rw[Nat.ModEq,Inverse_mul_one]
+          have bro : Nat.lcm (b.p-1) (b.q-1) ≥ 2 := phi_inequality b.p b.q b.hp b.hq b.ho
+          have bro1 : 2 = Nat.succ 1 := by simp
+          rw[bro1] at bro
+          simp at bro
+          rw[Nat.succ_le] at bro
+          exact bro
         have : a.e * b.d - 1 ≡ 0 [MOD (b.q - 1)] := by
-          sorry
+          have lemmar : 1 ≤ a.e *b.d := by 
+            have lemm : 0 < a.e * b.d  := by
+              rw[Nat.pos_iff_ne_zero]
+              apply mul_ne_zero
+              by_contra h'
+              have he : a.e > 2 := b.he.1
+              rw[h'] at he
+              simp at he 
+              rw[b.hd,value_d]
+              simp
+              apply inverse_neq_zero
+              apply phi_inequality b.p b.q b.hp b.hq b.ho
+            have tri : 1 = Nat.succ 0 := by simp
+            rw[tri]
+            rw[Nat.succ_le]
+            assumption
+          rw[Nat.ModEq.comm,Nat.modEq_iff_dvd' lemmar] at this     
+          rw[Nat.modEq_zero_iff_dvd]
+          assumption
         rw[Nat.modEq_zero_iff_dvd] at this
         assumption
       have : (a.e * b.d - 1) = (b.q - 1) * ((a.e * b.d - 1) / (b.q - 1)) := by
@@ -675,13 +689,11 @@ theorem cipher_correct' (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : 
       nth_rewrite 4[this]
       apply Nat.ModEq.pow 
       apply fermat
-
     have mod_1' : m ^ (a.e * b.d - 1) * m ≡ 1 * m [MOD b.q] := by
       apply Nat.ModEq.mul_right m mod_1
     have : 1 * m = m := by simp
     rw[this] at mod_1'
     apply mod_1'
-
   have H : m ^ (a.e * b.d) ≡ m [MOD n] := by
     have : n = b.p * b.q := by
       rw[hn, b.hn]
@@ -697,7 +709,6 @@ theorem cipher_correct' (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : 
       assumption
     rw[Nat.modEq_and_modEq_iff_modEq_mul hpq] at Hpq
     assumption
-
   rw[Nat.ModEq] at H
   have legit' : m % n = m := by
     apply Nat.mod_eq_of_lt legit
