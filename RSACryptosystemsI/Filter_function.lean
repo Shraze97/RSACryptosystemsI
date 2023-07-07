@@ -108,7 +108,7 @@ theorem remove_zero (l : List ℕ) : 0 ∉ List.remove 0 l := by
   intro contra 
   rw[List.mem_remove_iff] at contra
   apply contra.2
-  simp
+  simp?
 
 
 
@@ -129,7 +129,7 @@ theorem non_empty_list (l : List ℕ )(h : non_empty l = true) : l ≠ [] := by
   | [] => 
     contradiction
   | head :: tail => 
-    simp [non_empty] at h
+    simp only [non_empty] at h
     intro contra
     contradiction
 
@@ -175,9 +175,9 @@ theorem divides_aux (n : ℕ)(l : List ℕ)(lem : divides l n = false) : ∀ m �
 theorem divides_aux_inv (n : ℕ)(l : List ℕ)(lem : ∀ m ∈ l, ¬m ∣ n) : divides l n = false := by 
   match l with 
   | [] => 
-    simp [divides]
+    simp only [divides]
   | head :: tail => 
-    simp [divides]
+    simp only [divides, Bool.ite_eq_false_distrib, if_false_left_eq_and]
     apply And.intro
     · intro contra
       rw[← Nat.dvd_iff_mod_eq_zero] at contra
@@ -390,127 +390,127 @@ theorem coprime_generator (a : ℕ)(b : ℕ)(h : is_coprime a b = true) : Nat.co
            
 --   · sorry  
 
-/--Produces the proof that the minimum prime is in the list-/
-theorem min_prime_list_in_list (l : List ℕ)(h : l ≠ []) (h0 : 0 ∉ l )(hmain : min_prime_list l ≠ 0) : min_prime_list l ∈ l := by
-  match l with 
-  | [] => 
-    contradiction
-  | head :: tail =>
-    rw[min_prime_list] at hmain
-    split_ifs at hmain
-    · rename_i h' 
-      rw[min_prime_list]
-      simp [h']
-    · rename_i h'  
-      rw[min_prime_list]
-      simp [h']
-      have lem : tail ≠ [] := by 
-        by_contra contra
-        rw[contra] at hmain
-        rw[min_prime_list] at hmain
-        apply hmain
-        simp
-      have lem2 : 0 ∉ tail := by
-        intro contra
-        apply h0
-        simp [contra]
-      right 
-      apply min_prime_list_in_list tail lem lem2 hmain
+-- /--Produces the proof that the minimum prime is in the list-/
+-- theorem min_prime_list_in_list (l : List ℕ)(h : l ≠ []) (h0 : 0 ∉ l )(hmain : min_prime_list l ≠ 0) : min_prime_list l ∈ l := by
+--   match l with 
+--   | [] => 
+--     contradiction
+--   | head :: tail =>
+--     rw[min_prime_list] at hmain
+--     split_ifs at hmain
+--     · rename_i h' 
+--       rw[min_prime_list]
+--       simp [h']
+--     · rename_i h'  
+--       rw[min_prime_list]
+--       simp [h']
+--       have lem : tail ≠ [] := by 
+--         by_contra contra
+--         rw[contra] at hmain
+--         rw[min_prime_list] at hmain
+--         apply hmain
+--         simp
+--       have lem2 : 0 ∉ tail := by
+--         intro contra
+--         apply h0
+--         simp [contra]
+--       right 
+--       apply min_prime_list_in_list tail lem lem2 hmain
 
-/--Produces the proof that the minimum prime is prime-/
-theorem min_prime_list_is_prime (l : List ℕ)(h : l ≠ []) (h0 : 0 ∉ l )(hmain : min_prime_list l ≠ 0) : is_prime (min_prime_list l) := by
-  match l with 
-  | [] => 
-    contradiction
-  | head :: tail =>
-    rw[min_prime_list] at hmain
-    split_ifs at hmain
-    · rename_i h' 
-      rw[min_prime_list]
-      simp [h']
-    · rename_i h'  
-      rw[min_prime_list]
-      simp [h']   
-      have lem : tail ≠ [] := by 
-        by_contra contra
-        rw[contra] at hmain
-        rw[min_prime_list] at hmain
-        apply hmain
-        simp
-      have lem2 : 0 ∉ tail := by
-        intro contra
-        apply h0
-        simp [contra]
-      simp[min_prime_list_is_prime tail lem lem2 hmain]
+-- /--Produces the proof that the minimum prime is prime-/
+-- theorem min_prime_list_is_prime (l : List ℕ)(h : l ≠ []) (h0 : 0 ∉ l )(hmain : min_prime_list l ≠ 0) : is_prime (min_prime_list l) := by
+--   match l with 
+--   | [] => 
+--     contradiction
+--   | head :: tail =>
+--     rw[min_prime_list] at hmain
+--     split_ifs at hmain
+--     · rename_i h' 
+--       rw[min_prime_list]
+--       simp [h']
+--     · rename_i h'  
+--       rw[min_prime_list]
+--       simp [h']   
+--       have lem : tail ≠ [] := by 
+--         by_contra contra
+--         rw[contra] at hmain
+--         rw[min_prime_list] at hmain
+--         apply hmain
+--         simp
+--       have lem2 : 0 ∉ tail := by
+--         intro contra
+--         apply h0
+--         simp [contra]
+--       simp[min_prime_list_is_prime tail lem lem2 hmain]
 
 
 
-structure Eligible_List' where 
-  l : List ℕ
-  h : l ≠ []
-  h0 : 0 ∉ l
-  hmain : min_prime_list l ≠ 0
-  deriving Repr
+-- structure Eligible_List' where 
+--   l : List ℕ
+--   h : l ≠ []
+--   h0 : 0 ∉ l
+--   hmain : min_prime_list l ≠ 0
+--   deriving Repr
 
-/-- Auxilary Function to RandomPrimeGenerator fumction -/
-def RandomPrimeGenerator_aux(el : Eligible_List) : { t : ℕ // t ∈ el.l ∧ is_prime t = true} := 
-  pickElemD el.l is_prime (min_prime_list el.l) (min_prime_list_in_list el.l el.h el.h0 el.hmain) (min_prime_list_is_prime el.l el.h el.h0 el.hmain)
+-- /-- Auxilary Function to RandomPrimeGenerator fumction -/
+-- def RandomPrimeGenerator_aux(el : Eligible_List) : { t : ℕ // t ∈ el.l ∧ is_prime t = true} := 
+--   pickElemD el.l is_prime (min_prime_list el.l) (min_prime_list_in_list el.l el.h el.h0 el.hmain) (min_prime_list_is_prime el.l el.h el.h0 el.hmain)
 
-/-- Picking Out a random Prime from a list of natural numbers which also outputs the fact that the number is Prime -/
-def RandomPrimeGenerator(el : Eligible_List) : { t : ℕ // t ∈ el.l ∧ Nat.Prime t} := 
-  let a := RandomPrimeGenerator_aux el
-  ⟨a.val, ⟨ a.property.1, prime_gen (a.val) (a.property.2)⟩ ⟩
+-- /-- Picking Out a random Prime from a list of natural numbers which also outputs the fact that the number is Prime -/
+-- def RandomPrimeGenerator(el : Eligible_List) : { t : ℕ // t ∈ el.l ∧ Nat.Prime t} := 
+--   let a := RandomPrimeGenerator_aux el
+--   ⟨a.val, ⟨ a.property.1, prime_gen (a.val) (a.property.2)⟩ ⟩
 
-/--n + 1 is coprime to n + 2 -/
-theorem coprime (n : ℕ)(lem :n ≥ 2) : is_coprime (n + 1) (n + 2) = true := by 
-  simp [is_coprime]
-  intro contra
-  have lem : Nat.gcd (n + 1) (n + 2) = 1 := by
-    rw[← Nat.succ_eq_add_one]
-    rw[Nat.gcd_succ n (n + 2)]
-    rw[Nat.succ_eq_add_one]
-    have h' : 2 = 1 + 1 := by ring
-    rw[h',← add_assoc]
-    set b := n + 1 with h 
-    have h1 : (b + 1)% b = 1 := by 
-      rw[Nat.add_mod]
-      rw[Nat.mod_self]
-      ring_nf
-      rw[Nat.mod_mod]
-      set b' := n - 1 with h''
-      have h3 : n ≠ 0 := by 
-        intro contra'
-        rw[contra'] at lem
-        have : ¬(0 ≥ 2) := by ring_nf
-        exact this lem
-      have h2 : b' + 1 = n := by 
-        rw[h'']
-        exact Nat.succ_pred h3 
-      rw[h2.symm]
-      have : 1 + (b' + 1) = b' + 2 := by ring
-      rw[this]
-      exact Nat.one_mod b'
-    rw[h1]
-    simp
-  exact contra lem
-/-- More Condensed Form of the above theorem-/
-theorem coprime' (n : ℕ)(hn : n ≥ 1) : is_coprime n (n + 1) = true :=by 
-  sorry
-/--Theorem which states that the co-prime number was in the desired list-/
-theorem co_prime_in_list (n : ℕ)(hn: n ≥ 4 ) : n - 1 ∈ List.range' 3 (n - 3):=by 
-  set b := n - 3 with hb 
-  have hb1 : b ≥ 1 := by 
-    rw[hb]
-    exact Nat.sub_le_sub_right hn 3
-  have :  b - 1 = n - 4 := by  sorry 
-  have h : n - 1 = 3 + (n - 4) := by sorry
-  sorry
+-- /--n + 1 is coprime to n + 2 -/
+-- theorem coprime (n : ℕ)(lem :n ≥ 2) : is_coprime (n + 1) (n + 2) = true := by 
+--   simp [is_coprime]
+--   intro contra
+--   have lem : Nat.gcd (n + 1) (n + 2) = 1 := by
+--     rw[← Nat.succ_eq_add_one]
+--     rw[Nat.gcd_succ n (n + 2)]
+--     rw[Nat.succ_eq_add_one]
+--     have h' : 2 = 1 + 1 := by ring
+--     rw[h',← add_assoc]
+--     set b := n + 1 with h 
+--     have h1 : (b + 1)% b = 1 := by 
+--       rw[Nat.add_mod]
+--       rw[Nat.mod_self]
+--       ring_nf
+--       rw[Nat.mod_mod]
+--       set b' := n - 1 with h''
+--       have h3 : n ≠ 0 := by 
+--         intro contra'
+--         rw[contra'] at lem
+--         have : ¬(0 ≥ 2) := by ring_nf
+--         exact this lem
+--       have h2 : b' + 1 = n := by 
+--         rw[h'']
+--         exact Nat.succ_pred h3 
+--       rw[h2.symm]
+--       have : 1 + (b' + 1) = b' + 2 := by ring
+--       rw[this]
+--       exact Nat.one_mod b'
+--     rw[h1]
+--     simp
+--   exact contra lem
+-- /-- More Condensed Form of the above theorem-/
+-- theorem coprime' (n : ℕ)(hn : n ≥ 1) : is_coprime n (n + 1) = true :=by 
+--   sorry
+-- /--Theorem which states that the co-prime number was in the desired list-/
+-- theorem co_prime_in_list (n : ℕ)(hn: n ≥ 4 ) : n - 1 ∈ List.range' 3 (n - 3):=by 
+--   set b := n - 3 with hb 
+--   have hb1 : b ≥ 1 := by 
+--     rw[hb]
+--     exact Nat.sub_le_sub_right hn 3
+--   have :  b - 1 = n - 4 := by  sorry 
+--   have h : n - 1 = 3 + (n - 4) := by sorry
+--   sorry
 
-/--Random Co-prime generator -/
-def RandomCoPrimeGenerator_aux (n : ℕ)(hn : n ≥ 4) : {t : ℕ // t ∈ List.range' 3 (n - 3) ∧ is_coprime n t = true} := 
-  pickElemD (List.range' 3 (n - 3)) (is_coprime n) (n-1) (co_prime_in_list n hn) (coprime' n hn)
+-- /--Random Co-prime generator -/
+-- def RandomCoPrimeGenerator_aux (n : ℕ)(hn : n ≥ 4) : {t : ℕ // t ∈ List.range' 3 (n - 3) ∧ is_coprime n t = true} := 
+--   pickElemD (List.range' 3 (n - 3)) (is_coprime n) (n-1) (co_prime_in_list n hn) (coprime' n hn)
 
-/-!
-## Random Monad
+-- /-!
+-- ## Random Monad
 
-We used the IO Monad which has a lot of stuff besides randomness.-/
+-- We used the IO Monad which has a lot of stuff besides randomness.-/
