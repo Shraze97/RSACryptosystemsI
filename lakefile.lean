@@ -13,6 +13,6 @@ require mathlib from git
 
 @[default_target]
 lean_exe «rSACryptosystemsI» {
-  root := `Main
+  root := `RSACryptosystemsI
 }
-lean_lib utils
+

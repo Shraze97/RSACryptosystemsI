@@ -1,5 +1,10 @@
-import Mathlib
-import RSACryptosystemsI
+import Mathlib.Algebra.Group.Defs
+import Mathlib.Data.Nat.Prime
+import Mathlib.Data.Int.GCD
+import RSACryptosystemsI.MainStructure
+import Mathlib.Data.Nat.Choose.Sum
+import Mathlib.Data.Nat.Choose.Dvd
+
 
 /-- Proof that mod_pow a b n hneq = (a ^ b) % n -/
 theorem mod_pow_eq (a : ℕ)(b : ℕ)(n : ℕ)(pos: n ≠ 1)(hneq : n ≠ 0): mod_pow a b n hneq = (a ^ b) % n := by
