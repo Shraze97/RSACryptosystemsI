@@ -10,9 +10,9 @@ def mod_pow (a : ℕ)(b : ℕ)(n : ℕ)(hneq : n ≠ 0) : ℕ :=
   | Nat.succ k => 
     if k % 2 = 1 then 
     let c := mod_pow a ((k + 1)/2) n hneq 
-    (c * c) % n
+    (c * c) % n 
   else 
-    (a * (mod_pow a k n hneq)) % n
+    (a * (mod_pow a k n hneq)) % n 
 termination_by _ _ => b
 decreasing_by      
 simp
@@ -25,7 +25,7 @@ have h2 : (k + 1)/2 < k + 1 := by
   simp
   trivial
 try apply h1
-try apply h2
+try apply h2 
 
 def inverse (a : ℕ) (b : ℕ)(h : (Nat.gcd a b) = 1) : ℕ := 
   let (x, _) := Nat.xgcd a b
@@ -34,7 +34,7 @@ def inverse (a : ℕ) (b : ℕ)(h : (Nat.gcd a b) = 1) : ℕ :=
   else
     (Int.natAbs x) % b
 
-
+@[ext]
 structure Public_key  where 
   n : ℕ 
   e : ℕ 
@@ -69,6 +69,27 @@ def key_generation  (a : Key_pair) : Private_key :=
   let d := (value_d a)
   have h : d = (value_d a) := rfl
   Private_key.mk a d h
+
+
+def Private_key_gen (p : ℕ)(q : ℕ)(hp : Nat.Prime p)(hq : Nat.Prime q)(ho : p ≠ q)(e : ℕ )(he1 : Nat.coprime e (Nat.lcm (p - 1) (q - 1)))(he2 : 2 < e) : Private_key := 
+  let n := p * q
+  let he : 2 < e ∧ Nat.gcd e (Nat.lcm (p - 1) (q - 1)) = 1 := by 
+    constructor
+    exact he2
+    exact he1
+  have hn : n = p * q := by rfl
+  have hneq0 : n > 1 := by 
+    rw[hn]
+    have h1 : 1 = 1 * 1 := by rfl
+    rw[h1]
+    apply Nat.mul_lt_mul
+    exact hp.one_lt
+    exact LT.lt.le hq.one_lt
+    simp
+  let a := Public_key.mk n e hneq0
+  let b := Key_pair.mk a p hp q hq ho hn he 
+  key_generation b
+  
 
 
 /- The encryption Function-/

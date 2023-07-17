@@ -142,7 +142,7 @@ theorem freshman's_dream (a b : ℕ) (hp : Nat.Prime p) : ((a + b) ^ p) % p = (a
 /-- Fermat's Little Theorem: a ^ p ≡ a [MOD p] for prime p.-/
 theorem fermat_little_theorem_mod' (p : ℕ) (hp : Nat.Prime p) (a : ℕ) : a ^ p ≡ a [MOD p] := by
   induction a 
-  · simp 
+  · simp only [Nat.zero_eq, ne_eq]
     have h1 : 0 ^ p = 0 := by
       simp
       apply Nat.Prime.pos hp
@@ -280,8 +280,6 @@ theorem Inverse_mul_one (a : ℕ)(b : ℕ)(h : Nat.coprime a b)(h1 : b > 1) : (a
     rw[← Int.ModEq]
     have h3 : a*b ≡ 0 [ZMOD b] := by
       rw[← Int.mul_zero a]
-      have h4 : a ≡ a [ZMOD b] := by
-        exact Int.ModEq.rfl
       apply Int.ModEq.mul_left
       rw[Int.modEq_zero_iff_dvd]
     rw[Int.sub_eq_add_neg]
@@ -321,7 +319,7 @@ theorem Inverse_mul_one (a : ℕ)(b : ℕ)(h : Nat.coprime a b)(h1 : b > 1) : (a
       exact (Int.add_mul_emod_self_left (a * Nat.gcdA a b) b (Nat.gcdB a b)).symm
     rw[lem]
     rw[← h4]
-    simp 
+    simp only [Nat.cast_one] 
 
 lemma aux_mod (b : ℕ )(hb : b > 1) : 1 % b = 1 := by
   rw[Nat.mod_eq_of_lt hb]
@@ -554,8 +552,6 @@ lemma phi_inequality(p : ℕ )(q : ℕ)(hp : Nat.Prime p)(hq : Nat.Prime q )(ho 
     ·exact ho.symm 
   rw[Nat.lcm_comm]
   exact this q p hq hp ho.symm hh 
-  have h1 : q ≥ 2 := by
-    apply Nat.Prime.two_le hq
   have h2 : p ≥ 2 := by
     apply Nat.Prime.two_le hp 
   by_cases lem : p ≠ 2
@@ -566,10 +562,6 @@ lemma phi_inequality(p : ℕ )(q : ℕ)(hp : Nat.Prime p)(hq : Nat.Prime q )(ho 
       ·exact h2
       ·exact lem.symm
     have h4 : q > 2 := by
-      linarith
-    have h7 : q ≠ 2 := by
-      intro h'
-      rw[h'] at h4
       linarith
     have h5 : 2 ∣ (p - 1) := by
       apply Even.two_dvd
@@ -721,3 +713,124 @@ theorem cipher_correct' (b : Private_key)(m : ℕ)(legit : m < b.n)(hpneqdiva : 
   assumption
   exact Nat.ne_of_gt (a.hneq0)
   exact Nat.ne_of_gt (b.toKey_pair.toPublic_key.hneq0)
+
+lemma Private_key_gen_aux(b : Private_key)(p : ℕ)(q : ℕ)(hp : Nat.Prime p)(hq : Nat.Prime q)(ho : p ≠ q)(e : ℕ )(he1 : Nat.coprime e (Nat.lcm (p - 1) (q - 1)))(he2 : 2 < e)(hmain : b = Private_key_gen p q hp hq ho e he1 he2) : b.p = p ∧ b.q = q:= by 
+  apply And.intro
+  · rw[hmain]
+    unfold Private_key_gen
+    simp
+    unfold key_generation
+    simp
+  · rw[hmain]
+    unfold Private_key_gen
+    simp
+    unfold key_generation
+    simp 
+
+lemma Private_key_gen_aux_n(b : Private_key)(b1 : Private_key)(he1 : Nat.coprime b.e (Nat.lcm (b.q - 1) (b.p - 1)))(ho : b.q ≠ b.p)(hmain : b1 = Private_key_gen b.q b.p b.hq b.hp ho b.e he1 b.he.1) : b.n = b1.n := by 
+  rw[hmain]
+  unfold Private_key_gen
+  simp only
+  unfold key_generation
+  simp
+  rw[b.hn,mul_comm]
+
+lemma Private_key_gen_aux_twist (b : Private_key)(b1 : Private_key)(he1 : Nat.coprime b.e (Nat.lcm (b.q - 1) (b.p - 1)))(ho : b.q ≠ b.p)(hmain : b1 = Private_key_gen b.q b.p b.hq b.hp ho b.e he1 b.he.1) : b1.e = b.e := by
+  rw[hmain]
+  unfold Private_key_gen
+  simp only
+  unfold key_generation
+  simp
+
+lemma Private_key_gen_aux_twist' (b : Private_key)(b1 : Private_key)(he1 : Nat.coprime b.e (Nat.lcm (b.q - 1) (b.p - 1)))(ho : b.q ≠ b.p)(hmain : b1 = Private_key_gen b.q b.p b.hq b.hp ho b.e he1 b.he.1) : b1.d = b.d := by
+  rw[b1.hd,b.hd,value_d, value_d]
+  simp
+  have helemma : b1.e = b.e := by 
+    apply Private_key_gen_aux_twist b b1 he1 ho hmain
+  have hplemma : b.p = b1.q := ((Private_key_gen_aux b1 b.q b.p b.hq b.hp (Ne.symm b.ho) b.e he1 b.he.1 hmain).2).symm
+  have hqlemma : b.q = b1.p := ((Private_key_gen_aux b1 b.q b.p b.hq b.hp (Ne.symm b.ho) b.e he1 b.he.1 hmain).1).symm
+  conv in b1.toKey_pair.toPublic_key.e => rw[helemma]
+  have hlcm : Nat.lcm (b1.p - 1) (b1.q - 1) = Nat.lcm (b.p - 1) (b.q - 1) := by
+    rw[hplemma,hqlemma,Nat.lcm_comm]
+  conv in Nat.lcm (b1.toKey_pair.p - 1) (b1.toKey_pair.q - 1) => rw[hlcm]
+
+
+
+lemma Private_key_gen_aux_twist'''(b : Private_key)(b1 : Private_key)(he1 : Nat.coprime b.e (Nat.lcm (b.q - 1) (b.p - 1)))(ho : b.q ≠ b.p)(hmain : b1 = Private_key_gen b.q b.p b.hq b.hp ho b.e he1 b.he.1) : b.toKey_pair.toPublic_key = b1.toKey_pair.toPublic_key:= by 
+  rw[hmain]
+  unfold Private_key_gen
+  simp only
+  unfold key_generation
+  simp only
+  apply Public_key.ext
+  simp only
+  rw[b.hn,mul_comm]
+  simp only
+
+
+lemma Private_key_gen_aux_twist'' (b : Private_key)(b1 : Private_key)(he1 : Nat.coprime b.e (Nat.lcm (b.q - 1) (b.p - 1)))(ho : b.q ≠ b.p)(hmain : b1 = Private_key_gen b.q b.p b.hq b.hp ho b.e he1 b.he.1)(m : ℕ) : message' b m = message' b1 m := by 
+  rw[message',message',decryption,decryption]
+  have hdmain : b1.d = b.d := by
+    apply Private_key_gen_aux_twist' b b1 he1 ho hmain
+  rw[hdmain]
+  have hPublic_key : b.toKey_pair.toPublic_key = b1.toKey_pair.toPublic_key := by
+    apply Private_key_gen_aux_twist''' b b1 he1 ho hmain
+  conv in b.toKey_pair.toPublic_key => rw[hPublic_key]
+  have hn : b.n = b1.n := by
+    apply Private_key_gen_aux_n b b1 he1 ho hmain
+  conv in b.n => rw[hn]
+
+theorem Final_cipher_correct' (b : Private_key)(m : ℕ)(legit : m < b.n)(h0 : m > 0) : message' b m = m := by 
+  by_cases h : ¬(b.p ∣ m) ∧ ¬(b.q ∣ m) 
+  · apply cipher_correct b m legit h.1 h.2
+  · rw[not_and_or,not_not,not_not] at h
+    wlog h' : b.p ∣ m 
+    · 
+      have he1 : Nat.coprime b.e (Nat.lcm (b.q - 1) (b.p - 1)) := by 
+        have triv : Nat.lcm (b.q - 1) (b.p - 1) = Nat.lcm (b.p - 1) (b.q - 1) := by
+          rw[Nat.lcm_comm]
+        rw[triv]
+        apply b.he.2
+      set b1 := Private_key_gen b.q b.p b.hq b.hp (Ne.symm b.ho) b.e he1 b.he.1 with hb1
+      have hplemma : b.p = b1.q := ((Private_key_gen_aux b1 b.q b.p b.hq b.hp (Ne.symm b.ho) b.e he1 b.he.1 hb1).2).symm
+      have hqlemma : b.q = b1.p := ((Private_key_gen_aux b1 b.q b.p b.hq b.hp (Ne.symm b.ho) b.e he1 b.he.1 hb1).1).symm
+      have hnlemma : b1.n = b.n := by 
+        rw[b1.hn,b.hn]
+        rw[hplemma,hqlemma,mul_comm]
+      rw[hnlemma.symm] at legit
+      rw[hplemma,hqlemma] at h
+      rw[hplemma] at h'
+      have hpmain : b1.p ∣ m := (or_iff_right h').mp h
+      rw[or_comm] at h
+      have finalmain : message' b m = message' b1 m := by
+        apply Private_key_gen_aux_twist'' b b1 he1 (Ne.symm b.ho) hb1 m
+      rw[finalmain]
+      apply this b1 m legit h0 h hpmain     
+    · apply cipher_correct' b m legit h' h0
+
+theorem Final_cipher_correct(b : Private_key)(m : ℕ)(legit : m < b.n) : message' b m = m := by
+  by_cases h0 : m = 0
+  · rw[h0]
+    have hn : b.n > 1 := by 
+      rw[b.hn]
+      apply Right.one_lt_mul' (Nat.Prime.one_lt b.hp) (Nat.Prime.one_lt b.hq)
+    simp only [message', decryption,encryption]
+    rw[mod_pow_eq,mod_pow_eq]
+    have he : b.e > 0 := by
+      have he1 : b.e > 2 := (b.he).1
+      linarith
+    rw[zero_pow he,Nat.zero_mod]
+    have hd : b.d > 0 := by 
+      apply Nat.zero_lt_of_ne_zero
+      rw[b.hd,value_d]
+      simp
+      apply inverse_neq_zero
+      apply phi_inequality b.p b.q b.hp b.hq b.ho
+    rw[zero_pow hd,Nat.zero_mod]
+    all_goals apply ne_of_gt hn
+  · push_neg at h0
+    rw[← Nat.pos_iff_ne_zero] at h0 
+    apply Final_cipher_correct' b m legit h0
+
+
+
