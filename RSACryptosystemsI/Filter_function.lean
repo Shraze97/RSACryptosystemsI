@@ -108,7 +108,7 @@ theorem remove_zero (l : List ℕ) : 0 ∉ List.remove 0 l := by
   intro contra 
   rw[List.mem_remove_iff] at contra
   apply contra.2
-  simp?
+  simp only
 
 
 
@@ -335,6 +335,17 @@ theorem coprime_generator (a : ℕ)(b : ℕ)(h : is_coprime a b = true) : Nat.co
   simp [is_coprime] at h
   exact of_not_not (mt h not_false) 
 
+
+def gen_coprime_pair?(l : List ℕ)(a : ℕ) : Option { p : Nat // Nat.coprime a p ∧ p ∈ l}:=
+  match l with 
+  | [] => none
+  | head :: tail => 
+    if c : is_coprime a head then
+      some ⟨head,coprime_generator a head c, by simp only [List.find?, List.mem_cons, true_or]⟩
+    else
+      do 
+        let ⟨p,hp, hl⟩ ← gen_coprime_pair? tail a
+        some ⟨p,hp, by simp only [List.find?, List.mem_cons, hl, or_true]⟩
 
 
 -- /-- Defines an eligible List-/
