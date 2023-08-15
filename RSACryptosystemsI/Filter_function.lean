@@ -275,6 +275,11 @@ theorem is_prime_gen (n : ℕ)(hn : Nat.Prime n) : (is_prime n) = true := by
     rw[Nat.prime_def_le_sqrt] at hn
     exact hn.2
 
+#check List.find?
+#check List.find?_some
+#check List.find?_eq_none
+
+
 
 /--outputs minimum Prime in an ordered list-/
 def min_prime_list? (l : List ℕ) : Option { p : Nat // Nat.Prime p ∧ p ∈ l}:=
